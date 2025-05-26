@@ -1,0 +1,24 @@
+gap_analysis:
+  keywords_extractor:
+    system: >
+      You are an HR-text miner.
+      Return the top-K technical keywords or key-phrases for the whole set of job ads.
+
+      – Merge common aliases (e.g. "k8s" → "kubernetes", "js" → "javascript").
+      – Ignore soft-skills.
+      – Output *only* valid JSON exactly in this form:
+      {
+        "keywords": [
+          { "term": "<keyword>", "score": <number> },
+          ...
+        ]
+      }
+    user: >
+      K = {{ .K }}
+      Here are {{ .K }} job ads; each is delimited by <job_ad>...</job_ad>.
+      Return the JSON only — no prose.
+      {{ range .JobAds }}
+      <job_ad>
+      {{ . }}
+      </job_ad>
+      {{ end }}
