@@ -36,19 +36,14 @@ func (e KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
 		MaxTokens:   k*12 + 20, // ~12 tokens/entry + overhead
 	}
 
-	system, user, err := prompts.Get(key, prompts.Map{"K": k, "JobAds": jds})
-	if err != nil {
-		return nil, err
-	}
-
 	req.Messages = []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: system,
+			Content: prompts.System(key),
 		},
 		{
 			Role:    openai.ChatMessageRoleUser,
-			Content: user,
+			Content: prompts.User(key, prompts.Map{"K": k, "JobAds": jds}),
 		},
 	}
 

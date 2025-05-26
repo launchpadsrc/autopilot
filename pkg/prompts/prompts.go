@@ -11,11 +11,32 @@ import (
 )
 
 // Get retrieves and interpolates a prompt by its path with the given variables.
-func Get(path string, vars any) (string, string, error) {
+func Get(path string, vars ...any) (string, string, error) {
 	if global == nil {
 		return "", "", fmt.Errorf("prompts: global instance is not initialized")
 	}
+	if len(vars) == 0 {
+		vars = []any{nil}
+	}
 	return global.Get(path, vars)
+}
+
+// System retrieves the system prompt only, ignoring the errors.
+func System(path string, vars ...any) string {
+	if global == nil {
+		return ""
+	}
+	system, _, _ := global.Get(path, vars)
+	return system
+}
+
+// User retrieves the user prompt only, ignoring the errors.
+func User(path string, vars ...any) string {
+	if global == nil {
+		return ""
+	}
+	_, user, _ := global.Get(path, vars)
+	return user
 }
 
 var global *Prompts
