@@ -1,0 +1,7 @@
+settings:
+  token_env: BOT_TOKEN
+  long_poller:
+
+commands:
+  /resume: Convert CV into JSON schema
+  /keywords: Extract keywords from job offers
