@@ -13,7 +13,7 @@ import (
 func (b Bot) onResume(c tele.Context) error {
 	doc := c.Message().Document
 	if doc == nil {
-		return c.Send("Please attach a PDF resume")
+		return c.Send("💡 Attach a PDF resume.")
 	}
 
 	rc, err := b.File(&doc.File)

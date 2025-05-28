@@ -8,7 +8,7 @@ require (
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/sashabaranov/go-openai v1.40.0
 	github.com/stretchr/testify v1.10.0
-	gopkg.in/telebot.v4 v4.0.0-beta.4
+	gopkg.in/telebot.v4 v4.0.0-beta.5
 	gopkg.in/yaml.v3 v3.0.1
 )
 
