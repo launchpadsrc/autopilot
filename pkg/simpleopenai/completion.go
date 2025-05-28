@@ -28,7 +28,12 @@ type (
 	}
 )
 
-// Completion provides a simpler API to OpenAI's chat completion endpoint.
+// Completion wraps CreateChatCompletion for a more convenient interface.
+// If the type T is a string, it returns the content directly.
+// Otherwise, it expects the content to be a valid JSON and unmarshals it into T.
+//
+// TODO: Should we use the new Responses API instead?
+// TODO: See: https://platform.openai.com/docs/api-reference/responses.
 func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 	req := openai.ChatCompletionRequest{
 		Model:       r.Model,
@@ -69,7 +74,6 @@ func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 	}
 
 	// Normalize the content to remove any code block formatting.
-	content = strings.ReplaceAll(content, "\n", " ")
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimSuffix(content, "```")
 	content = strings.TrimSpace(content)

@@ -1,6 +1,8 @@
 package gapanalysis
 
 import (
+	"math"
+
 	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/pkg/prompts"
@@ -24,7 +26,7 @@ func NewKeywordsExtractor(ai *openai.Client) KeywordsExtractor {
 func (ke KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
 	const (
 		key   = "gap_analysis.keywords_extractor"
-		model = "gpt-4o-mini"
+		model = openai.GPT4oMini
 	)
 	prompt := simpleopenai.CompletionRequestPrompt{
 		System: prompts.System(key),
@@ -33,7 +35,7 @@ func (ke KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
 	return simpleopenai.Completion[[]Keyword](ke.ai, simpleopenai.CompletionRequest{
 		Model:       model,
 		Prompt:      prompt,
-		Temperature: 0,         // deterministic output
+		Temperature: math.SmallestNonzeroFloat32,
 		MaxTokens:   k*12 + 20, // ~12 tokens/entry + overhead
 	})
 }
