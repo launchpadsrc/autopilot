@@ -33,12 +33,10 @@ gap_analysis:
       – Merge common aliases (e.g. "k8s" → "kubernetes", "js" → "javascript").
       – Ignore soft-skills.
       – Output *only* valid JSON exactly in this form:
-      {
-        "keywords": [
-          { "term": "<keyword>", "score": <number> },
-          ...
-        ]
-      }
+      [
+        { "term": "<keyword>", "score": <number> },
+        ...
+      ]
     user: |
       K = {{ .K }}
       Here are {{ .K }} job ads; each is delimited by <job_ad>...</job_ad>.

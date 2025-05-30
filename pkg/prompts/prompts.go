@@ -15,9 +15,6 @@ func Get(path string, vars ...any) (string, string, error) {
 	if global == nil {
 		return "", "", fmt.Errorf("prompts: global instance is not initialized")
 	}
-	if len(vars) == 0 {
-		vars = []any{nil}
-	}
 	return global.Get(path, vars)
 }
 
@@ -26,7 +23,7 @@ func System(path string, vars ...any) string {
 	if global == nil {
 		return ""
 	}
-	system, _, _ := global.Get(path, vars)
+	system, _, _ := global.Get(path, vars...)
 	return system
 }
 
@@ -35,7 +32,7 @@ func User(path string, vars ...any) string {
 	if global == nil {
 		return ""
 	}
-	_, user, _ := global.Get(path, vars)
+	_, user, _ := global.Get(path, vars...)
 	return user
 }
 
@@ -75,7 +72,11 @@ func New(filePath string) (*Prompts, error) {
 	return &Prompts{v: prompts}, nil
 }
 
-func (p *Prompts) Get(path string, vars any) (string, string, error) {
+func (p *Prompts) Get(path string, vars ...any) (string, string, error) {
+	if len(vars) == 0 {
+		vars = []any{nil}
+	}
+
 	final := any(p.v)
 	for _, part := range strings.Split(path, ".") {
 		if m, ok := final.(map[string]any); ok {
@@ -90,12 +91,12 @@ func (p *Prompts) Get(path string, vars any) (string, string, error) {
 		return "", "", fmt.Errorf("prompts: invalid prompt structure at path: %s", path)
 	}
 
-	system, err := interpolateTemplate(prompts["system"].(string), vars)
+	system, err := interpolateTemplate(prompts["system"].(string), vars[0])
 	if err != nil {
 		return "", "", err
 	}
 
-	user, err := interpolateTemplate(prompts["user"].(string), vars)
+	user, err := interpolateTemplate(prompts["user"].(string), vars[0])
 	if err != nil {
 		return "", "", err
 	}
