@@ -1,6 +1,8 @@
 package gapanalysis
 
 import (
+	"math"
+
 	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/pkg/prompts"
@@ -31,7 +33,8 @@ func (ke KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
 		User:   prompts.User(key, prompts.Map{"K": k, "JobAds": jds}),
 	}
 	return simpleopenai.Completion[[]Keyword](ke.ai, simpleopenai.CompletionRequest{
-		Model:  model,
-		Prompt: prompt,
+		Model:       model,
+		Prompt:      prompt,
+		Temperature: math.SmallestNonzeroFloat32,
 	})
 }

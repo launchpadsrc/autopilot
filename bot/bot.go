@@ -1,7 +1,11 @@
 package bot
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"reflect"
+	"unicode/utf8"
 
 	tele "gopkg.in/telebot.v4"
 	"gopkg.in/telebot.v4/layout"
@@ -48,6 +52,27 @@ func (b Bot) Start() {
 	b.Handle(tele.OnDocument, b.onResume)
 
 	b.Bot.Start()
+}
+
+// SendJSON sends a JSON indented repr of the provided value.
+// If the resulting string is too long, it sends it as a file attachment instead.
+func (b Bot) SendJSON(c tele.Context, v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	jsonstr := "```json\n" + string(data) + "\n```"
+	if utf8.RuneCountInString(jsonstr) <= 4096 {
+		return c.Send(jsonstr, tele.ModeMarkdownV2)
+	}
+
+	go c.Notify(tele.UploadingDocument)
+
+	return c.Send(&tele.Document{
+		File:     tele.FromReader(bytes.NewReader(data)),
+		FileName: reflect.TypeOf(v).String() + ".json",
+	})
 }
 
 func (b Bot) sendHint(c tele.Context, hint string, v ...any) error {

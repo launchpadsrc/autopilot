@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"encoding/json"
 	"net/url"
 	"strconv"
 	"strings"
@@ -49,6 +48,5 @@ func (b Bot) onKeywords(c tele.Context) error {
 		return b.sendHint(c, "Failed to extract keywords:", err)
 	}
 
-	data, _ := json.MarshalIndent(keywords, "", "  ")
-	return c.Send("```json\n"+string(data)+"```", tele.ModeMarkdownV2)
+	return b.SendJSON(c, keywords)
 }
