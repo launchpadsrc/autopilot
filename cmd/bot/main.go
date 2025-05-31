@@ -9,27 +9,21 @@ import (
 	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/bot"
-	"launchpad.icu/autopilot/parsers"
 )
 
 func init() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	slog.SetLogLoggerLevel(slog.LevelInfo)
 }
 
 func main() {
 	ai := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
 	if _, err := ai.ListModels(context.Background()); err != nil { // ping
-		log.Fatal("failed to connect to openai:", err)
+		log.Fatalln("failed to connect to openai:", err)
 	}
 
-	parsers := bot.Parsers{
-		"djinni.co":   parsers.NewDjinni(),
-		"jobs.dou.ua": parsers.NewDou(),
-	}
-
-	b, err := bot.New(ai, parsers)
+	b, err := bot.New(ai)
 	if err != nil {
-		log.Fatal("failed to create telegram bot", err)
+		log.Fatalln("failed to create bot:", err)
 	}
 
 	b.Start()

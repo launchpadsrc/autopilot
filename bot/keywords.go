@@ -7,7 +7,7 @@ import (
 
 	tele "gopkg.in/telebot.v4"
 
-	"launchpad.icu/autopilot/core/gapanalysis"
+	"launchpad.icu/autopilot/core/jobanalysis"
 )
 
 func (b Bot) onKeywords(c tele.Context) error {
@@ -43,7 +43,7 @@ func (b Bot) onKeywords(c tele.Context) error {
 		jds = append(jds, job.Description)
 	}
 
-	keywords, err := gapanalysis.NewKeywordsExtractor(b.ai).Extract(k, jds)
+	keywords, err := jobanalysis.NewKeywordsExtractor(b.ai).Extract(k, jds)
 	if err != nil {
 		return b.sendHint(c, "Failed to extract keywords:", err)
 	}

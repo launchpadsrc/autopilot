@@ -27,17 +27,16 @@ func (p Parser) Parse(pdf []byte) (*Resume, error) {
 	if err != nil {
 		return nil, err
 	}
-	const (
-		key   = "cv_schema"
-		model = openai.GPT4Dot1
-	)
 
+	const (
+		key = "cv_schema"
+	)
 	prompt := simpleopenai.CompletionRequestPrompt{
 		System: prompts.System(key),
 		User:   prompts.User(key, content),
 	}
 	return simpleopenai.Completion[*Resume](p.ai, simpleopenai.CompletionRequest{
-		Model:       model,
+		Model:       prompts.Model(key),
 		Prompt:      prompt,
 		Temperature: math.SmallestNonzeroFloat32,
 	})

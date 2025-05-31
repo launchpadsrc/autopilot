@@ -1,10 +1,11 @@
 package parsers
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"launchpad.icu/autopilot/pkg/jsondump"
 )
 
 func TestAll(t *testing.T) {
@@ -23,8 +24,7 @@ func TestAll(t *testing.T) {
 				t.Fatalf("failed to parse job: %v", err)
 			}
 
-			data, _ := json.MarshalIndent(job, "", "  ")
-			t.Logf("%s job parsed successfully: %s", name, string(data))
+			t.Logf("%s job parsed successfully: %s", name, jsondump.Dump(job))
 
 			require.Equal(t, p.target, job.URL)
 			require.NotEmpty(t, job.Title)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"text/template"
 	"unicode/utf8"
 
 	tele "gopkg.in/telebot.v4"
@@ -12,21 +13,23 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 
+	"launchpad.icu/autopilot/bot/cache"
 	"launchpad.icu/autopilot/parsers"
+	"launchpad.icu/autopilot/pkg/htmlstrip"
 )
 
 type Bot struct {
+	*layout.Layout
 	*tele.Bot
 
-	ai *openai.Client
-
+	cache   *cache.Cache
 	parsers map[string]parsers.Parser
+
+	ai *openai.Client
 }
 
-type Parsers = map[string]parsers.Parser
-
-func New(ai *openai.Client, parsers Parsers) (*Bot, error) {
-	lt, err := layout.New("bot.yml")
+func New(ai *openai.Client) (*Bot, error) {
+	lt, err := layout.New("bot.yml", templateFuncs)
 	if err != nil {
 		return nil, err
 	}
@@ -39,10 +42,22 @@ func New(ai *openai.Client, parsers Parsers) (*Bot, error) {
 		return nil, err
 	}
 
+	cache, err := cache.New("cache.db")
+	if err != nil {
+		return nil, err
+	}
+
+	parsers := map[string]parsers.Parser{
+		"djinni.co":   parsers.NewDjinni(),
+		"jobs.dou.ua": parsers.NewDou(),
+	}
+
 	return &Bot{
+		Layout:  lt,
 		Bot:     b,
-		ai:      ai,
+		cache:   cache,
 		parsers: parsers,
+		ai:      ai,
 	}, nil
 }
 
@@ -51,6 +66,7 @@ func (b Bot) Start() {
 	b.Handle("/resume", b.onResume)
 	b.Handle(tele.OnDocument, b.onResume)
 
+	b.goFeeder()
 	b.Bot.Start()
 }
 
@@ -78,7 +94,11 @@ func (b Bot) SendJSON(c tele.Context, v any) error {
 func (b Bot) sendHint(c tele.Context, hint string, v ...any) error {
 	text := "💡 " + hint
 	if len(v) > 0 {
-		text += fmt.Sprintln(v...)
+		text += " " + fmt.Sprintln(v...)
 	}
 	return c.Send(text)
+}
+
+var templateFuncs = template.FuncMap{
+	"htmlstrip": htmlstrip.Strip,
 }

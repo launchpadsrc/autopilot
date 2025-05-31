@@ -7,8 +7,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mmcdole/gofeed"
 )
 
 type Djinni struct {
@@ -19,6 +21,10 @@ func NewDjinni() Djinni {
 	return Djinni{
 		client: &http.Client{},
 	}
+}
+
+func (Djinni) Host() string {
+	return "djinni.co"
 }
 
 func (d Djinni) ParseJob(url string) (*Job, error) {
@@ -89,4 +95,45 @@ func (Djinni) findJob(doc *goquery.Document) (job *jobJSONLD) {
 	job = new(jobJSONLD)
 	doc.Find("script[type='application/ld+json']").EachWithBreak(selector)
 	return job
+}
+
+func (d Djinni) ParseFeed() ([]FeedEntry, error) {
+	const url = "https://djinni.co/jobs/rss/?company_type=outsource&company_type=outstaff&company_type=product&company_type=startup"
+
+	f, err := gofeed.NewParser().ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]FeedEntry, 0, len(f.Items))
+	for _, it := range f.Items {
+		id := it.GUID
+		if id == "" {
+			id = it.Link // fallback if GUID missing
+		}
+
+		published := it.Published
+		if published == "" && it.PublishedParsed != nil {
+			published = it.PublishedParsed.Format(time.RFC1123Z)
+		}
+
+		fe := FeedEntry{
+			ID:          id,
+			Title:       it.Title,
+			Link:        it.Link,
+			Published:   it.Published,
+			Description: it.Description,
+		}
+
+		entries = append(entries, d.normalizeFeedEntry(fe))
+	}
+
+	return entries, nil
+}
+
+func (Djinni) normalizeFeedEntry(fe FeedEntry) FeedEntry {
+	fe.ID = strings.TrimPrefix(fe.ID, "https://djinni.co/")
+	fe.ID = strings.TrimSuffix(fe.ID, "/")
+	fe.Description = strings.TrimSpace(fe.Description)
+	return fe
 }

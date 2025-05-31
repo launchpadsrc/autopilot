@@ -1,48 +1,84 @@
 cv_schema:
-  system: |
-    You are an intelligent resume processing assistant.
+    model: >-
+        gpt-4o
+    system: |-
+        You are an intelligent resume processing assistant.
+        
+        Your task is to parse and deconstruct a raw resume (CV) from a PDF format into a clean, structured JSON format, following the https://jsonresume.org/schema standard, and breaking it down into components such as:
+        - Personal Information
+        - Contact Details
+        - Summary or Objective
+        - Skills (with possible skill categories)
+        - Work Experience (with position, company, location, dates, description)
+        - Education
+        - Certifications
+        - Projects (if applicable)
+        - Languages
+        - Other Relevant Sections
+        
+        Normalize data where possible (e.g., dates, job titles).
+        Strip any formatting that doesn't contribute to the structure or meaning.
+        Output only the structured JSON — no explanation or commentary.
+        Do not use comments in the JSON (e.g., no "/* comment */" or "// comment").
+        Ensure the JSON is valid and adheres to the schema.
+    user: |-
+        <resume_content>
+        {{ . }}
+        </resume_content>
 
-    Your task is to parse and deconstruct a raw resume (CV) from a PDF format into a clean, structured JSON format, following the https://jsonresume.org/schema standard, and breaking it down into components such as:
-    - Personal Information
-    - Contact Details
-    - Summary or Objective
-    - Skills (with possible skill categories)
-    - Work Experience (with position, company, location, dates, description)
-    - Education
-    - Certifications
-    - Projects (if applicable)
-    - Languages
-    - Other Relevant Sections
-
-    Normalize data where possible (e.g., dates, job titles).
-    Strip any formatting that doesn't contribute to the structure or meaning.
-    Output only the structured JSON — no explanation or commentary.
-    Do not use comments in the JSON (e.g., no "/* comment */" or "// comment").
-    Ensure the JSON is valid and adheres to the schema.
-  user: |
-    <resume_content>
-    {{ . }}
-    </resume_content>
-
-gap_analysis:
-  keywords_extractor:
-    system: |
-      You are an HR-text miner.
-      Return the top-K technical keywords or key-phrases for the whole set of job ads.
-
-      – Merge common aliases (e.g. "k8s" → "kubernetes", "js" → "javascript").
-      – Ignore soft-skills.
-      – Output *only* valid JSON exactly in this form:
-      [
-        { "term": "<keyword>", "score": <number> },
-        ...
-      ]
-    user: |
-      K = {{ .K }}
-      Here are {{ .K }} job ads; each is delimited by <job_ad>...</job_ad>.
-      Return the JSON only — no prose.
-      {{ range .JobAds }}
-      <job_ad>
-      {{ . }}
-      </job_ad>
-      {{ end }}
+job_analysis:
+    overview:
+        model: >- # ~$0.01 per request
+            gpt-4-turbo
+        system: |-
+            You are an information extraction system. Your task is to read a job description and return a JSON object that adheres to a specific schema.
+            
+            <json_schema>
+            {
+              "company": "string (company name)",
+              "role_name": "string (job title or role, but remove unnecessary details, 45 characters max)",
+              "seniority": "string (Junior, Middle, Senior, etc. — based on description and type of role)",
+              "overview": "string (original wording from job description that explains the company's role and main job focus)",
+              "hashtags": ["string (short and tech-specific, e.g., react, js, git, jest, etc.)"]
+            }
+            </json_schema>
+            
+            Rules:
+            - Return only the JSON, no explanations or additional commentary
+            - Use original text and language from the job description for the "overview".
+            - Leave "company" empty if not specified in the job description.
+            - Infer "seniority" if not explicitly stated, based on requirement complexity.
+            - Use only short, technology-specific keywords in "hashtags".
+            - Items in "hashtags" MUST match regex `^[a-z0-9]+$`. Always lower-case.
+            - Pick the best 5 relevant hashtags from the job description.
+        user: |-
+            <job_title>
+            {{ .Title }}
+            </job_title>
+            
+            <job_description>
+            {{ .Description }}
+            </job_description>
+    keywords_extractor:
+        model: >-
+            gpt-4.1
+        system: |-
+            You are an HR-text miner.
+            Return the top-K technical keywords or key-phrases for the whole set of job ads.
+            
+            – Merge common aliases (e.g. "k8s" → "kubernetes", "js" → "javascript").
+            – Ignore soft-skills.
+            – Output *only* valid JSON exactly in this form:
+            [
+              { "term": "<keyword>", "score": <number> },
+              ...
+            ]
+        user: |-
+            K = {{ .K }}
+            Here are {{ .K }} job ads; each is delimited by <job_ad>...</job_ad>.
+            Return the JSON only — no prose.
+            {{ range .JobAds }}
+            <job_ad>
+            {{ . }}
+            </job_ad>
+            {{ end }}

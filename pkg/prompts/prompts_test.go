@@ -8,8 +8,9 @@ import (
 func TestNewParser(t *testing.T) {
 	// Create a temporary YAML file for testing
 	yamlContent := `
-gap_analysis:
+job_analysis:
   keywords_extractor:
+    model: gpt-4o
     system: "System prompt with {{.K}} keywords."
     user: "User prompt for {{.JobAds}}."
 `
@@ -38,8 +39,9 @@ gap_analysis:
 func TestGetPrompt(t *testing.T) {
 	// Create a temporary YAML file for testing
 	yamlContent := `
-gap_analysis:
+job_analysis:
   keywords_extractor:
+    model: gpt-4o
     system: "System prompt with {{.K}} keywords."
     user: "User prompt for {{.JobAds}}."
 `
@@ -66,13 +68,18 @@ gap_analysis:
 		"JobAds": []string{"Job ad 1", "Job ad 2"},
 	}
 
-	systemPrompt, userPrompt, err := parser.Get("gap_analysis.keywords_extractor", vars)
+	model, systemPrompt, userPrompt, err := parser.Get("job_analysis.keywords_extractor", vars)
 	if err != nil {
 		t.Fatalf("Get failed: %v", err)
 	}
 
+	expectedModel := "gpt-4o"
 	expectedSystem := "System prompt with 5 keywords."
 	expectedUser := "User prompt for [Job ad 1 Job ad 2]."
+
+	if model != expectedModel {
+		t.Errorf("Expected model: %s, got: %s", expectedModel, model)
+	}
 
 	if systemPrompt != expectedSystem {
 		t.Errorf("Expected system prompt: %s, got: %s", expectedSystem, systemPrompt)
@@ -86,8 +93,9 @@ gap_analysis:
 func TestGetPromptInvalidPath(t *testing.T) {
 	// Create a temporary YAML file for testing
 	yamlContent := `
-gap_analysis:
+job_analysis:
   keywords_extractor:
+    model: gpt-4o
     system: "System prompt with {{.K}} keywords."
     user: "User prompt for {{.JobAds}}."
 `
@@ -109,7 +117,7 @@ gap_analysis:
 	}
 
 	// Test Get with an invalid path
-	_, _, err = parser.Get("invalid.path", nil)
+	_, _, _, err = parser.Get("invalid.path", nil)
 	if err == nil {
 		t.Fatalf("Expected error for invalid path, got nil")
 	}

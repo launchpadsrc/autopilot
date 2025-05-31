@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/mmcdole/gofeed"
 )
 
 type Dou struct {
@@ -19,6 +20,10 @@ func NewDou() Dou {
 	return Dou{
 		client: &http.Client{},
 	}
+}
+
+func (Dou) Host() string {
+	return "jobs.dou.ua"
 }
 
 func (d Dou) ParseJob(url string) (*Job, error) {
@@ -68,3 +73,42 @@ func (d Dou) ParseJob(url string) (*Job, error) {
 }
 
 var locationsInUA = []string{"віддалено", "за кордоном"}
+
+func (d Dou) ParseFeed() ([]FeedEntry, error) {
+	const url = "https://jobs.dou.ua/vacancies/feeds/"
+
+	f, err := gofeed.NewParser().ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make([]FeedEntry, 0, len(f.Items))
+	for _, it := range f.Items {
+		id := it.GUID
+		if id == "" {
+			id = it.Link // fallback if GUID missing
+		}
+
+		fe := FeedEntry{
+			ID:          id,
+			Title:       it.Title,
+			Link:        it.Link,
+			Published:   it.Published,
+			Description: it.Description,
+		}
+
+		entries = append(entries, d.normalizeFeedEntry(fe))
+	}
+
+	return entries, nil
+}
+
+func (Dou) normalizeFeedEntry(fe FeedEntry) FeedEntry {
+	fe.ID = strings.TrimPrefix(fe.ID, "https://jobs.dou.ua/")
+	fe.ID = strings.Split(fe.ID, "/?")[0]
+	fe.Link = strings.TrimSuffix(fe.Link, "/?utm_source=jobsrss")
+	fe.Description = strings.TrimPrefix(fe.Description, "Project description:")
+	fe.Description = strings.TrimSuffix(fe.Description, "Відгукнутися на вакансію")
+	fe.Description = strings.TrimSpace(fe.Description)
+	return fe
+}

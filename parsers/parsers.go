@@ -1,7 +1,9 @@
 package parsers
 
 type Parser interface {
+	Host() string
 	ParseJob(url string) (*Job, error)
+	ParseFeed() ([]FeedEntry, error)
 }
 
 type Job struct {

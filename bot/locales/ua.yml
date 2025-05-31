@@ -1,0 +1,13 @@
+feeder:
+  job: |-
+    🚀 <b>{{ .Overview.RoleName }}</b>
+    {{- if .Overview.Company }}
+    Компанія: <b>{{ .Overview.Company }}</b>
+    {{- end }}
+    Рівень: <b>{{ .Overview.Seniority }}</b>
+    
+    {{ .Overview.Description }}
+    
+    {{ range .Overview.Hashtags }}#{{ . }} {{ end }}
+    
+    <b>Відгукнутись на вакансію:</b> <a href="{{ .Link }}">{{ .Parser}} →</a>
