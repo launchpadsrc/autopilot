@@ -4,19 +4,17 @@ import (
 	"context"
 	"log"
 	"log/slog"
-	"os"
-
-	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/bot"
+	"launchpad.icu/autopilot/cmd/bot/aifactory"
 )
 
 func init() {
-	slog.SetLogLoggerLevel(slog.LevelInfo)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 }
 
 func main() {
-	ai := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	ai := aifactory.Client()
 	if _, err := ai.ListModels(context.Background()); err != nil { // ping
 		log.Fatalln("failed to connect to openai:", err)
 	}
