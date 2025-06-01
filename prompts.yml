@@ -29,7 +29,7 @@ cv_schema:
 job_analysis:
     overview:
         model: >- # ~$0.01 per request
-            gpt-4-turbo
+            gpt-4o-mini
         system: |-
             You are an information extraction system. Your task is to read a job description and return a JSON object that adheres to a specific schema.
             
@@ -50,6 +50,7 @@ job_analysis:
             - Infer "seniority" if not explicitly stated, based on requirement complexity.
             - Use only short, technology-specific keywords in "hashtags".
             - Items in "hashtags" MUST match regex `^[a-z0-9]+$`. Always lower-case.
+            - Never put dots, dashes, underscore, or any other punctuation in "hashtags".
             - Pick the best 5 relevant hashtags from the job description.
         user: |-
             <job_title>
