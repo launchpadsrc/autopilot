@@ -9,8 +9,8 @@ import (
 	"github.com/ledongthuc/pdf"
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/prompts"
 	"launchpad.icu/autopilot/pkg/simpleopenai"
+	"launchpad.icu/autopilot/pkg/simpleopenai/prompts"
 )
 
 type Parser struct {

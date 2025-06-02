@@ -83,3 +83,86 @@ job_analysis:
             {{ . }}
             </job_ad>
             {{ end }}
+
+launchpad_steps:
+    01_kickoff:
+        model: >-
+            gpt-4o
+        system: |-
+            You are a Launchpad-Profile-Parser.
+            Your task is to turn a student’s plain-text answers to the Kick-off questionnaire into a machine-readable JSON object.
+
+            Rules:
+            - Parse the numbered answers 1–7.
+            - If a required data point is absent, unclear, or violates expected type/format, append an item to `problems` with the appropriate `reason`.  
+               – Examples: missing salary numbers → problem: "MISSING_FIELD", reason: "SALARY"
+               – Level not 0-5 → problem: "BAD_FORMAT", reason: "STACK"
+            - Do NOT invent values. Leave the field `null` if data is genuinely missing.  
+            - `observations` may contain: spelling hints, salary vs. stack mismatch, inconsistent seniority, poor grammar, etc.
+        user: |-
+            {{ . }}
+        json:
+            name: kickoff_profile
+            strict: true
+            schema: {
+                "type": "object",
+                "properties": {
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "stack": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tech": { "type": "string" },
+                                "level": { "type": "number", "minimum": 0, "maximum": 5 }
+                            },
+                            "required": [ "tech","level" ]
+                        }
+                    },
+                    "motivation": {
+                        "type": "string"
+                    },
+                    "english": {
+                        "type": "string",
+                        "enum": [ "A2","B1","B2","C1","C2" ]
+                    },
+                    "weekly_hours": {
+                        "type": "number",
+                        "minimum": 1
+                    },
+                    "salary_expectations": {
+                        "type": "object",
+                        "properties": {
+                            "range": { "type": "string" },
+                            "currency": { "type": "string", "enum": [ "USD","EUR","UAH" ] }
+                        },
+                        "required": [ "range", "currency" ]
+                    },
+                    "assets": {
+                        "type": "object",
+                        "properties": {
+                            "github": { "type": [ "string", "null" ], "format": "uri" }
+                        }
+                    },
+                    "problems": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "problem": { "type": "string", "enum": [ "MISSING_FIELD", "BAD_FORMAT", "AMBIGUOUS_VALUE" ] },
+                                "reason": { "type": "string" }
+                            },
+                            "required": [ "problem", "reason" ]
+                        }
+                    },
+                    "observations": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                    }
+                }
+            }

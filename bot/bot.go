@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"text/template"
 	"unicode/utf8"
@@ -34,7 +35,12 @@ func New(ai *openai.Client) (*Bot, error) {
 		return nil, err
 	}
 
-	b, err := tele.NewBot(lt.Settings())
+	pref := lt.Settings()
+	pref.OnError = func(err error, c tele.Context) {
+		slog.Error("global handler", "error", err)
+	}
+
+	b, err := tele.NewBot(pref)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +68,9 @@ func New(ai *openai.Client) (*Bot, error) {
 }
 
 func (b Bot) Start() {
+	slog.Info("starting", "go", "bot")
+
+	b.Handle("/firststep", b.onFirstStep)
 	b.Handle("/keywords", b.onKeywords)
 	b.Handle("/resume", b.onResume)
 	b.Handle(tele.OnDocument, b.onResume)

@@ -2,6 +2,7 @@ package bot
 
 import (
 	"log/slog"
+	"os"
 	"time"
 
 	tele "gopkg.in/telebot.v4"
@@ -11,6 +12,10 @@ import (
 )
 
 func (b Bot) goFeeder() {
+	if os.Getenv("FEEDER_OFF") == "true" {
+		return
+	}
+
 	logger := slog.With("go", "feeder")
 	logger.Info("starting")
 

@@ -20,11 +20,19 @@ type (
 		Temperature float32
 		MaxTokens   int
 		Prompt      CompletionRequestPrompt
+		Schema      *CompletionResponseSchema
 	}
 
 	CompletionRequestPrompt struct {
-		System string `json:"system"`
-		User   string `json:"user"`
+		System string
+		User   string
+	}
+
+	CompletionResponseSchema struct {
+		Name        string     `mapstructure:"name"`
+		Description string     `mapstructure:"description"`
+		Strict      bool       `mapstructure:"strict"`
+		Schema      JSONSchema `mapstructure:"schema"`
 	}
 )
 
@@ -39,6 +47,18 @@ func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 		Model:       r.Model,
 		Temperature: r.Temperature,
 		MaxTokens:   r.MaxTokens,
+	}
+
+	if r.Schema != nil {
+		req.ResponseFormat = &openai.ChatCompletionResponseFormat{
+			Type: openai.ChatCompletionResponseFormatTypeJSONSchema,
+			JSONSchema: &openai.ChatCompletionResponseFormatJSONSchema{
+				Name:        r.Schema.Name,
+				Description: r.Schema.Description,
+				Schema:      r.Schema.Schema,
+				Strict:      r.Schema.Strict,
+			},
+		}
 	}
 
 	if r.Prompt.System != "" {
