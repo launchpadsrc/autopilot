@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"launchpad.icu/autopilot/bot"
-	"launchpad.icu/autopilot/cmd/bot/aifactory"
+	"launchpad.icu/autopilot/pkg/aifactory"
 )
 
 func init() {
