@@ -48,10 +48,11 @@ job_analysis:
             - Use original text and language from the job description for the "overview".
             - Leave "company" empty if not specified in the job description.
             - Infer "seniority" if not explicitly stated, based on requirement complexity.
+            - Pick the best 5 relevant hashtags from the job description.
             - Use only short, technology-specific keywords in "hashtags".
             - Items in "hashtags" MUST match regex `^[a-z0-9]+$`. Always lower-case.
             - Never put dots, dashes, underscore, or any other punctuation in "hashtags".
-            - Pick the best 5 relevant hashtags from the job description.
+            - Make exceptions for technologies like "c++", "c#" (e.g "c++" → "cpp", "c#" → "csharp").
         user: |-
             <job_title>
             {{ .Title }}
