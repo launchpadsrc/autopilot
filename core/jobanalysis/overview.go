@@ -1,12 +1,9 @@
 package jobanalysis
 
 import (
-	"math"
-
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/simpleopenai"
-	"launchpad.icu/autopilot/pkg/simpleopenai/prompts"
+	"launchpad.icu/autopilot/pkg/openaix"
 )
 
 type Overview struct {
@@ -25,17 +22,9 @@ func NewOverviewer(ai *openai.Client) Overviewer {
 	return Overviewer{ai: ai}
 }
 
-func (jo Overviewer) Overview(title, desc string) (Overview, error) {
-	const (
-		key = "job_analysis.overview"
-	)
-	prompt := simpleopenai.CompletionRequestPrompt{
-		System: prompts.System(key),
-		User:   prompts.User(key, prompts.Map{"Title": title, "Description": desc}),
-	}
-	return simpleopenai.Completion[Overview](jo.ai, simpleopenai.CompletionRequest{
-		Model:       prompts.Model(key),
-		Prompt:      prompt,
-		Temperature: math.SmallestNonzeroFloat32,
+func (jo Overviewer) Overview(title, description string) (Overview, error) {
+	return openaix.Completion[Overview](jo.ai, "job_analysis.overview", openaix.Map{
+		"Title":       title,
+		"Description": description,
 	})
 }

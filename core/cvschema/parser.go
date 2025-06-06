@@ -3,14 +3,12 @@ package cvschema
 import (
 	"bytes"
 	"io"
-	"math"
 	"strings"
 
 	"github.com/ledongthuc/pdf"
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/simpleopenai"
-	"launchpad.icu/autopilot/pkg/simpleopenai/prompts"
+	"launchpad.icu/autopilot/pkg/openaix"
 )
 
 type Parser struct {
@@ -27,19 +25,7 @@ func (p Parser) Parse(pdf []byte) (*Resume, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	const (
-		key = "cv_schema"
-	)
-	prompt := simpleopenai.CompletionRequestPrompt{
-		System: prompts.System(key),
-		User:   prompts.User(key, content),
-	}
-	return simpleopenai.Completion[*Resume](p.ai, simpleopenai.CompletionRequest{
-		Model:       prompts.Model(key),
-		Prompt:      prompt,
-		Temperature: math.SmallestNonzeroFloat32,
-	})
+	return openaix.Completion[*Resume](p.ai, "cv_schema", content)
 }
 
 func (p Parser) readPDF(raw *bytes.Reader) (string, error) {

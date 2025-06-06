@@ -1,9 +1,6 @@
 package launchpad
 
-import (
-	"launchpad.icu/autopilot/pkg/simpleopenai"
-	"launchpad.icu/autopilot/pkg/simpleopenai/prompts"
-)
+import "launchpad.icu/autopilot/pkg/openaix"
 
 type (
 	Profile struct {
@@ -42,17 +39,5 @@ type (
 )
 
 func (s SmartSteps) Kickoff01(answers string) (map[string]any, error) {
-	const (
-		key = "launchpad_steps.01_kickoff"
-	)
-	prompt := simpleopenai.CompletionRequestPrompt{
-		System: prompts.System(key),
-		User:   prompts.User(key, answers),
-	}
-	return simpleopenai.Completion[map[string]any](s.ai, simpleopenai.CompletionRequest{
-		Prompt:      prompt,
-		Model:       prompts.Model(key),
-		Schema:      prompts.JSON(key),
-		Temperature: 0.2,
-	})
+	return openaix.Completion[map[string]any](s.ai, "launchpad_steps.01_kickoff", answers)
 }

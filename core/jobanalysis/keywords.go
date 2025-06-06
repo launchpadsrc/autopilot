@@ -1,12 +1,9 @@
 package jobanalysis
 
 import (
-	"math"
-
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/simpleopenai"
-	"launchpad.icu/autopilot/pkg/simpleopenai/prompts"
+	"launchpad.icu/autopilot/pkg/openaix"
 )
 
 type Keyword struct {
@@ -24,16 +21,8 @@ func NewKeywordsExtractor(ai *openai.Client) KeywordsExtractor {
 
 // Extract extracts K keywords from a list of job descriptions.
 func (ke KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
-	const (
-		key = "job_analysis.keywords_extractor"
-	)
-	prompt := simpleopenai.CompletionRequestPrompt{
-		System: prompts.System(key),
-		User:   prompts.User(key, prompts.Map{"K": k, "JobAds": jds}),
-	}
-	return simpleopenai.Completion[[]Keyword](ke.ai, simpleopenai.CompletionRequest{
-		Model:       prompts.Model(key),
-		Prompt:      prompt,
-		Temperature: math.SmallestNonzeroFloat32,
+	return openaix.Completion[[]Keyword](ke.ai, "job_analysis.keywords_extractor", openaix.Map{
+		"K":      k,
+		"JobAds": jds,
 	})
 }

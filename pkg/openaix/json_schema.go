@@ -1,4 +1,4 @@
-package simpleopenai
+package openaix
 
 import "encoding/json"
 

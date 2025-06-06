@@ -1,4 +1,4 @@
-package simpleopenai
+package openaix
 
 import (
 	"bytes"
@@ -6,26 +6,23 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
 
-var logger = slog.With("package", "simpleopenai")
-
 type (
 	CompletionRequest struct {
-		Model       string
-		Temperature float32
-		MaxTokens   int
-		Prompt      CompletionRequestPrompt
-		Schema      *CompletionResponseSchema
+		Model       string                    `mapstructure:"model"`
+		Temperature float32                   `mapstructure:"temperature"`
+		MaxTokens   int                       `mapstructure:"max_tokens"`
+		Prompts     CompletionRequestPrompts  `mapstructure:"prompts"`
+		Schema      *CompletionResponseSchema `mapstructure:"schema"`
 	}
 
-	CompletionRequestPrompt struct {
-		System string
-		User   string
+	CompletionRequestPrompts struct {
+		System string `mapstructure:"system"`
+		User   string `mapstructure:"user"`
 	}
 
 	CompletionResponseSchema struct {
@@ -36,13 +33,38 @@ type (
 	}
 )
 
+// Execute interpolates the system and user prompts with the provided variables.
+func (crp *CompletionRequestPrompts) Execute(vars ...any) (err error) {
+	if len(vars) == 0 {
+		return nil
+	}
+	crp.System, err = interpolateTemplate(crp.System, vars[0])
+	if err != nil {
+		return err
+	}
+	crp.User, err = interpolateTemplate(crp.User, vars[0])
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Completion wraps CreateChatCompletion for a more convenient interface.
 // If the type T is a string, it returns the content directly.
 // Otherwise, it expects the content to be a valid JSON and unmarshals it into T.
 //
 // TODO: Should we use the new Responses API instead?
 // TODO: See: https://platform.openai.com/docs/api-reference/responses.
-func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
+// TODO: Implement logging of requests.
+func Completion[T any](ai *openai.Client, key string, vars ...any) (v T, _ error) {
+	r, err := configUnmarshalKey[CompletionRequest](key)
+	if err != nil {
+		return v, err
+	}
+	if err := r.Prompts.Execute(vars...); err != nil {
+		return v, err
+	}
+
 	req := openai.ChatCompletionRequest{
 		Model:       r.Model,
 		Temperature: r.Temperature,
@@ -61,16 +83,16 @@ func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 		}
 	}
 
-	if r.Prompt.System != "" {
+	if r.Prompts.System != "" {
 		req.Messages = append(req.Messages, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: r.Prompt.System,
+			Content: r.Prompts.System,
 		})
 	}
-	if r.Prompt.User != "" {
+	if r.Prompts.User != "" {
 		req.Messages = append(req.Messages, openai.ChatCompletionMessage{
 			Role:    openai.ChatMessageRoleUser,
-			Content: r.Prompt.User,
+			Content: r.Prompts.User,
 		})
 	}
 
@@ -79,7 +101,7 @@ func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 		return v, err
 	}
 	if len(res.Choices) == 0 {
-		return v, errors.New("simpleopenai: empty choices in response")
+		return v, errors.New("openaix: empty choices in response")
 	}
 
 	content := res.Choices[0].Message.Content
@@ -100,17 +122,17 @@ func Completion[T any](ai *openai.Client, r CompletionRequest) (v T, _ error) {
 
 	normalized := []byte(content)
 	if !json.Valid(normalized) {
-		return v, errors.New("simpleopenai: invalid json in completion response")
+		return v, errors.New("openaix: invalid json in completion response")
 	}
 
 	compact := new(bytes.Buffer)
 	if err := json.Compact(compact, normalized); err != nil {
-		return v, fmt.Errorf("simpleopenai: %w", err)
+		return v, fmt.Errorf("openaix: %w", err)
 	}
 
 	logger.Debug("completion compact response", "content", compact.String())
 	if err := json.NewDecoder(compact).Decode(&v); err != nil {
-		return v, fmt.Errorf("simpleopenai: %w", err)
+		return v, fmt.Errorf("openaix: %w", err)
 	}
 
 	return v, nil
