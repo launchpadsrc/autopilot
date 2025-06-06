@@ -104,7 +104,7 @@ launchpad_steps:
                 {{ . }}
         json:
             name: kickoff_profile
-            strict: true
+            strict: false
             schema: {
                 "type": "object",
                 "properties": {
@@ -123,7 +123,7 @@ launchpad_steps:
                                     "type": "string"
                                 },
                                 "level": {
-                                    "type": "number",
+                                    "type": "integer",
                                     "minimum": 0,
                                     "maximum": 5
                                 }

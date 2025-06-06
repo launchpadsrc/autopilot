@@ -13,11 +13,11 @@ import (
 
 type (
 	CompletionRequest struct {
-		Model       string                    `mapstructure:"model"`
-		Temperature float32                   `mapstructure:"temperature"`
-		MaxTokens   int                       `mapstructure:"max_tokens"`
-		Prompts     CompletionRequestPrompts  `mapstructure:"prompts"`
-		Schema      *CompletionResponseSchema `mapstructure:"schema"`
+		Model       string                   `mapstructure:"model"`
+		Temperature float32                  `mapstructure:"temperature"`
+		MaxTokens   int                      `mapstructure:"max_tokens"`
+		Prompts     CompletionRequestPrompts `mapstructure:"prompts"`
+		JSON        *CompletionResponseJSON  `mapstructure:"json"`
 	}
 
 	CompletionRequestPrompts struct {
@@ -25,7 +25,7 @@ type (
 		User   string `mapstructure:"user"`
 	}
 
-	CompletionResponseSchema struct {
+	CompletionResponseJSON struct {
 		Name        string     `mapstructure:"name"`
 		Description string     `mapstructure:"description"`
 		Strict      bool       `mapstructure:"strict"`
@@ -71,14 +71,14 @@ func Completion[T any](ai *openai.Client, key string, vars ...any) (v T, _ error
 		MaxTokens:   r.MaxTokens,
 	}
 
-	if r.Schema != nil {
+	if r.JSON != nil {
 		req.ResponseFormat = &openai.ChatCompletionResponseFormat{
 			Type: openai.ChatCompletionResponseFormatTypeJSONSchema,
 			JSONSchema: &openai.ChatCompletionResponseFormatJSONSchema{
-				Name:        r.Schema.Name,
-				Description: r.Schema.Description,
-				Schema:      r.Schema.Schema,
-				Strict:      r.Schema.Strict,
+				Name:        r.JSON.Name,
+				Description: r.JSON.Description,
+				Schema:      r.JSON.Schema,
+				Strict:      r.JSON.Strict,
 			},
 		}
 	}
