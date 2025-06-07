@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"text/template"
 
+	"github.com/sashabaranov/go-openai"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +21,14 @@ func Read(path string) error {
 	config = viper.New()
 	config.SetConfigFile(path)
 	return config.ReadInConfig()
+}
+
+type Wrapper[T any] struct {
+	ai *openai.Client
+}
+
+func New[T any](ai *openai.Client) Wrapper[T] {
+	return Wrapper[T]{ai: ai}
 }
 
 func configUnmarshalKey[T any](key string) (v T, _ error) {

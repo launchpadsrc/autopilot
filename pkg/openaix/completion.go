@@ -6,10 +6,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/sashabaranov/go-openai"
 )
+
+type ChatContext[T any] struct {
+	ai      *openai.Client
+	key     string
+	history []openai.ChatCompletionMessage
+}
 
 type (
 	CompletionRequest struct {
@@ -17,7 +24,7 @@ type (
 		Temperature float32                  `mapstructure:"temperature"`
 		MaxTokens   int                      `mapstructure:"max_tokens"`
 		Prompts     CompletionRequestPrompts `mapstructure:"prompts"`
-		JSON        *CompletionResponseJSON  `mapstructure:"json"`
+		JSON        *CompletionRequestJSON   `mapstructure:"json"`
 	}
 
 	CompletionRequestPrompts struct {
@@ -25,7 +32,7 @@ type (
 		User   string `mapstructure:"user"`
 	}
 
-	CompletionResponseJSON struct {
+	CompletionRequestJSON struct {
 		Name        string     `mapstructure:"name"`
 		Description string     `mapstructure:"description"`
 		Strict      bool       `mapstructure:"strict"`
@@ -49,20 +56,42 @@ func (crp *CompletionRequestPrompts) Execute(vars ...any) (err error) {
 	return nil
 }
 
-// Completion wraps CreateChatCompletion for a more convenient interface.
-// If the type T is a string, it returns the content directly.
+// Completion is deprecated.
+func Completion[T any](ai *openai.Client, key string, vars ...any) (T, error) {
+	return Chat[T](ai, key).Completion(vars...)
+}
+
+// Chat wraps CreateChatCompletion for a more convenient interface.
+// If the type T is a string, the completion requests will return the string content as it is.
 // Otherwise, it expects the content to be a valid JSON and unmarshals it into T.
+// Preserves the chat history.
 //
 // TODO: Should we use the new Responses API instead?
 // TODO: See: https://platform.openai.com/docs/api-reference/responses.
 // TODO: Implement logging of requests.
-func Completion[T any](ai *openai.Client, key string, vars ...any) (v T, _ error) {
-	r, err := configUnmarshalKey[CompletionRequest](key)
+func Chat[T any](ai *openai.Client, key string) *ChatContext[T] {
+	return &ChatContext[T]{ai: ai, key: key}
+}
+
+func (cc *ChatContext[T]) Completion(vars ...any) (T, error) {
+	historyBefore := slices.Clone(cc.history)
+	v, err := cc.completion(vars...)
+	if err != nil {
+		cc.history = historyBefore
+	}
+	return v, err
+}
+
+func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
+	r, err := configUnmarshalKey[CompletionRequest](cc.key)
 	if err != nil {
 		return v, err
 	}
 	if err := r.Prompts.Execute(vars...); err != nil {
 		return v, err
+	}
+	if r.Prompts.User == "" {
+		return v, errors.New("openaix: user prompt is empty")
 	}
 
 	req := openai.ChatCompletionRequest{
@@ -89,14 +118,20 @@ func Completion[T any](ai *openai.Client, key string, vars ...any) (v T, _ error
 			Content: r.Prompts.System,
 		})
 	}
-	if r.Prompts.User != "" {
-		req.Messages = append(req.Messages, openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleUser,
-			Content: r.Prompts.User,
-		})
+	if len(cc.history) > 0 {
+		req.Messages = append(req.Messages, cc.history...)
 	}
 
-	res, err := ai.CreateChatCompletion(context.Background(), req)
+	message := openai.ChatCompletionMessage{
+		Role:    openai.ChatMessageRoleUser,
+		Content: r.Prompts.User,
+	}
+
+	// Add user message to the history.
+	cc.history = append(cc.history, message)
+	req.Messages = append(req.Messages, message)
+
+	res, err := cc.ai.CreateChatCompletion(context.Background(), req)
 	if err != nil {
 		return v, err
 	}
@@ -104,7 +139,11 @@ func Completion[T any](ai *openai.Client, key string, vars ...any) (v T, _ error
 		return v, errors.New("openaix: empty choices in response")
 	}
 
-	content := res.Choices[0].Message.Content
+	message = res.Choices[0].Message
+	content := message.Content
+
+	// Add assistant response to the history.
+	cc.history = append(cc.history, message)
 
 	logger := logger.With("id", res.ID, "model", res.Model)
 	logger.Debug("completion raw response", "content", content)

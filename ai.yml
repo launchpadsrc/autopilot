@@ -90,16 +90,29 @@ launchpad_steps:
         model: gpt-4o
         prompts:
             system: |-
-                You are a Launchpad-Profile-Parser.
-                Your task is to turn a student’s plain-text answers to the Kick-off questionnaire into a machine-readable JSON object.
+                <backstory>
+                You are a user profile parser for Launchpad.
                 
-                Rules:
-                - Parse the numbered answers 1–7.
+                Launchpad is an AI-powered platform designed to fully automate the key stages of job search for IT specialists. The core of the solution is the Autopilot Telegram bot, which guides candidates through the entire job-seeking process, from CV preparation to offer acceptance, with minimal manual effort. The whole system leverages GPT models for content generation, feedback analysis, and process personalization, eliminating the need for traditional mentors or manual coaching. Users interact with the bot by answering targeted questions and receive actionable, tailored recommendations at each step.
+                </backstory>
+                
+                <goal>
+                Your task is to turn a student’s plain-text answers to the Kick-off questionnaire into a machine-readable JSON object.
+                </goal>
+                
+                <rules>
+                - Parse the numbered answers. Consider the previous context from messages history.
+                - Do NOT invent values. Leave the field `null` if data is genuinely missing.
+                - `observations` may contain such facts: spelling hints, salary vs. stack mismatch, inconsistent seniority, poor grammar, etc. Language: English.
                 - If a required data point is absent, unclear, or violates expected type/format, append an item to `problems` with the appropriate `reason`.  
                    – Examples: missing salary numbers → problem: "MISSING_FIELD", reason: "SALARY"
                    – Level not 0-5 → problem: "BAD_FORMAT", reason: "STACK"
-                - Do NOT invent values. Leave the field `null` if data is genuinely missing.  
-                - `observations` may contain: spelling hints, salary vs. stack mismatch, inconsistent seniority, poor grammar, etc.
+                - If there are `problems` in the user answer, include `assistant_response` field with a meaningful response.
+                   - Always address the user informally (на "ти"). But don't welcome them, as this is not the first interaction.
+                   - Encourage user to continue answering to the questionnaire.
+                   - Include a short brief on `observations` so that user understands what to fix.
+                   - Respond in the Ukrainian language as it's the only non-system message.
+                </rules>
             user: |-
                 {{ . }}
         json:
@@ -107,7 +120,13 @@ launchpad_steps:
             strict: false
             schema: {
                 "type": "object",
+                "required": [
+                    "assistant_response"
+                ],
                 "properties": {
+                    "assistant_response": {
+                        "type": "string"
+                    },
                     "roles": {
                         "type": "array",
                         "items": {
@@ -151,7 +170,7 @@ launchpad_steps:
                         "type": "number",
                         "minimum": 1
                     },
-                    "salary_expectations": {
+                    "salary": {
                         "type": "object",
                         "properties": {
                             "range": {

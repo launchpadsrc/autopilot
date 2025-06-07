@@ -1,7 +1,8 @@
 settings:
   token_env: BOT_TOKEN
   locales_dir: bot/locales
-  long_poller:
+  parse_mode: html
+  long_poller: {}
 
 commands:
   /resume: Convert CV into JSON schema
@@ -9,3 +10,6 @@ commands:
 
 config:
   jobs_channel: -1002615826128
+
+  steps:
+    01_kickoff: 3

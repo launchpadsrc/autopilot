@@ -1,9 +1,14 @@
 package launchpad
 
-import "github.com/sashabaranov/go-openai"
+import (
+	"github.com/sashabaranov/go-openai"
+
+	"launchpad.icu/autopilot/pkg/openaix"
+)
 
 type SmartSteps struct {
-	ai *openai.Client
+	ai   *openai.Client
+	chat *openaix.ChatContext[Profile]
 }
 
 func NewSmartSteps(ai *openai.Client) SmartSteps {

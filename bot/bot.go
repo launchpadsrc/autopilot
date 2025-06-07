@@ -1,16 +1,13 @@
 package bot
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"reflect"
 	"text/template"
-	"unicode/utf8"
 
 	tele "gopkg.in/telebot.v4"
 	"gopkg.in/telebot.v4/layout"
+	"gopkg.in/telebot.v4/middleware"
 
 	"github.com/sashabaranov/go-openai"
 
@@ -70,34 +67,17 @@ func New(ai *openai.Client) (*Bot, error) {
 func (b Bot) Start() {
 	slog.Info("starting", "go", "bot")
 
-	b.Handle("/firststep", b.onFirstStep)
+	b.Use(middleware.Recover())
+	b.Use(b.Layout.Middleware("ua"))
+
+	b.Handle("/start", b.onStart)
+	b.Handle(tele.OnText, b.onChat)
 	b.Handle("/keywords", b.onKeywords)
 	b.Handle("/resume", b.onResume)
 	b.Handle(tele.OnDocument, b.onResume)
 
 	b.goFeeder()
 	b.Bot.Start()
-}
-
-// SendJSON sends a JSON indented repr of the provided value.
-// If the resulting string is too long, it sends it as a file attachment instead.
-func (b Bot) SendJSON(c tele.Context, v any) error {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	jsonstr := "```json\n" + string(data) + "\n```"
-	if utf8.RuneCountInString(jsonstr) <= 4096 {
-		return c.Send(jsonstr, tele.ModeMarkdownV2)
-	}
-
-	go c.Notify(tele.UploadingDocument)
-
-	return c.Send(&tele.Document{
-		File:     tele.FromReader(bytes.NewReader(data)),
-		FileName: reflect.TypeOf(v).String() + ".json",
-	})
 }
 
 func (b Bot) sendHint(c tele.Context, hint string, v ...any) error {

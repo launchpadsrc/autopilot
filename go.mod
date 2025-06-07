@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
+	github.com/looplab/fsm v1.0.3
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/sashabaranov/go-openai v1.40.0
 	github.com/spf13/viper v1.13.0
