@@ -85,9 +85,10 @@ job_analysis:
                 </job_ad>
                 {{ end }}
 
-launchpad_steps:
+launchpad:
     01_kickoff:
         model: gpt-4o
+        temperature: 0.0000000001
         prompts:
             system: |-
                 <backstory>
