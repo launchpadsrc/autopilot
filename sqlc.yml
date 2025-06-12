@@ -1,0 +1,36 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "database/migrations"
+    queries: "database/queries"
+    gen:
+      go:
+        package: "sqlc"
+        out: "database/sqlc"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_interface: true
+        rename:
+          ai_company: CompanyAI
+          ai_role: RoleAI
+          ai_seniority: SeniorityAI
+          ai_overview: OverviewAI
+          ai_hashtags: HashtagsAI
+        overrides:
+          - db_type: "uuid"
+            go_type: "string"
+          - db_type: "pg_catalog.int4"
+            go_type: "int"
+          - db_type: "serial"
+            go_type: "int"
+          - db_type: "bigint"
+            go_type: "int"
+          - db_type: "int"
+            go_type: "int"
+          - db_type: "timestamptz"
+            go_type:
+              type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              type: "*time.Time"

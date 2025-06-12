@@ -11,22 +11,24 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/bot/cache"
-	"launchpad.icu/autopilot/parsers"
+	"launchpad.icu/autopilot/database"
 	"launchpad.icu/autopilot/pkg/htmlstrip"
 )
+
+type Config struct {
+	DB *database.DB
+	AI *openai.Client
+}
 
 type Bot struct {
 	*layout.Layout
 	*tele.Bot
 
-	cache   *cache.Cache
-	parsers map[string]parsers.Parser
-
+	db *database.DB
 	ai *openai.Client
 }
 
-func New(ai *openai.Client) (*Bot, error) {
+func New(c Config) (*Bot, error) {
 	lt, err := layout.New("bot.yml", templateFuncs)
 	if err != nil {
 		return nil, err
@@ -45,22 +47,11 @@ func New(ai *openai.Client) (*Bot, error) {
 		return nil, err
 	}
 
-	cache, err := cache.New("cache.db")
-	if err != nil {
-		return nil, err
-	}
-
-	parsers := map[string]parsers.Parser{
-		"djinni.co":   parsers.NewDjinni(),
-		"jobs.dou.ua": parsers.NewDou(),
-	}
-
 	return &Bot{
-		Layout:  lt,
-		Bot:     b,
-		cache:   cache,
-		parsers: parsers,
-		ai:      ai,
+		Layout: lt,
+		Bot:    b,
+		db:     c.DB,
+		ai:     c.AI,
 	}, nil
 }
 

@@ -33,7 +33,7 @@ func New[T any](ai *openai.Client) Wrapper[T] {
 
 func configUnmarshalKey[T any](key string) (v T, _ error) {
 	if config == nil {
-		return v, errors.New("openaix: config is not read")
+		return v, errors.New("openaix: config has not been read")
 	}
 	if err := config.UnmarshalKey(key, &v); err != nil {
 		return v, fmt.Errorf("openaix: %w", err)

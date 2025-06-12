@@ -71,6 +71,16 @@ func (b Bucket[T]) Walk(fn func(T) error) error {
 	})
 }
 
+// Count returns the number of items in the bucket.
+func (b Bucket[T]) Count() int {
+	var count int
+	_ = b.db.View(func(tx *bbolt.Tx) error {
+		count = b.bucket(tx).Stats().KeyN
+		return nil
+	})
+	return count
+}
+
 func (b Bucket[T]) bucket(tx *bbolt.Tx) *bbolt.Bucket {
 	bucket := tx.Bucket([]byte(b.key))
 	if len(b.sub) > 0 {

@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/mmcdole/gofeed"
@@ -112,16 +111,11 @@ func (d Djinni) ParseFeed() ([]FeedEntry, error) {
 			id = it.Link // fallback if GUID missing
 		}
 
-		published := it.Published
-		if published == "" && it.PublishedParsed != nil {
-			published = it.PublishedParsed.Format(time.RFC1123Z)
-		}
-
 		fe := FeedEntry{
 			ID:          id,
 			Title:       it.Title,
 			Link:        it.Link,
-			Published:   it.Published,
+			Published:   it.PublishedParsed,
 			Description: it.Description,
 		}
 

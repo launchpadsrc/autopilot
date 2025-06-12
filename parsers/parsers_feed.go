@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/PuerkitoBio/goquery"
@@ -9,10 +10,10 @@ import (
 
 type FeedEntry struct {
 	ID          string
-	Title       string
 	Link        string
-	Published   string
+	Title       string
 	Description string
+	Published   *time.Time
 }
 
 // BoltID implements `bboltx.BucketValue`.

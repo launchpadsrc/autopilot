@@ -93,7 +93,7 @@ func (d Dou) ParseFeed() ([]FeedEntry, error) {
 			ID:          id,
 			Title:       it.Title,
 			Link:        it.Link,
-			Published:   it.Published,
+			Published:   it.PublishedParsed,
 			Description: it.Description,
 		}
 

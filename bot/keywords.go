@@ -28,7 +28,7 @@ func (b Bot) onKeywords(c tele.Context) error {
 			return b.sendHint(c, "Invalid link:", link)
 		}
 
-		parser, ok := b.parsers[uri.Hostname()]
+		parser, ok := feederParsers[uri.Hostname()]
 		if !ok {
 			return b.sendHint(c, "No parser for:", uri.Hostname())
 		}

@@ -3,8 +3,6 @@ package launchpad
 import (
 	"github.com/looplab/fsm"
 	"github.com/sashabaranov/go-openai"
-
-	"launchpad.icu/autopilot/pkg/wrap"
 )
 
 // stepNewFunc is a Step constructor.
@@ -33,8 +31,8 @@ type Result struct {
 }
 
 // NewResult creates a new Result with the provided value wrapped.
-func NewResult[T any](v T) *Result {
-	return &Result{Wrapped: wrap.Wrap[T](v)}
+func NewResult(v any) *Result {
+	return &Result{Wrapped: v}
 }
 
 // State represents a finite state machine for managing the launchpad steps of the user.
