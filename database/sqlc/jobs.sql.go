@@ -92,3 +92,130 @@ func (q *Queries) JobsExist(ctx context.Context, ids []string) ([]string, error)
 	}
 	return items, nil
 }
+
+const scoredJobs = `-- name: ScoredJobs :many
+with ranked as (
+    select
+        j.id,
+        j.source,
+        j.published_at,
+        j.link,
+        j.title,
+        j.description,
+        j.ai_company,
+        j.ai_role,
+        j.ai_seniority,
+        j.ai_overview,
+        j.ai_hashtags,
+
+        /* tech keywords overlap */
+        cardinality(array(
+            select unnest(j.ai_hashtags)
+            intersect
+            select unnest($2::text[])
+        ))::numeric
+        as tech_match,
+
+        /* role keyword match */
+        case
+            when j.ai_role ilike any ($3::text[])
+            then 1
+            else 0
+        end::numeric
+        as role_match,
+
+        /* simple seniority weight */
+        case j.ai_seniority
+            when 'Junior' then 1.0
+            when 'Middle' then 0.7
+            else               0.4
+            end
+        as seniority_boost
+    from
+        jobs as j
+    left join user_jobs as uj
+        on uj.job_id = j.id and uj.user_id = $4
+    where
+        uj.job_id is null
+)
+select
+    id,
+    source,
+    published_at,
+    link,
+    title,
+    description,
+    ai_company,
+    ai_role,
+    ai_seniority,
+    ai_overview,
+    ai_hashtags,
+    (tech_match + role_match * 0.8 + seniority_boost)::double precision AS score
+from
+    ranked
+order by
+    score desc,
+    published_at desc
+limit
+    $1
+`
+
+type ScoredJobsParams struct {
+	Limit        int32    `json:"limit"`
+	Hashtags     []string `json:"hashtags"`
+	RolePatterns []string `json:"role_patterns"`
+	UserID       int64    `json:"user_id"`
+}
+
+type ScoredJobsRow struct {
+	ID          string     `json:"id"`
+	Source      string     `json:"source"`
+	PublishedAt *time.Time `json:"published_at"`
+	Link        string     `json:"link"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	CompanyAI   string     `json:"ai_company"`
+	RoleAI      string     `json:"ai_role"`
+	SeniorityAI string     `json:"ai_seniority"`
+	OverviewAI  string     `json:"ai_overview"`
+	HashtagsAI  []string   `json:"ai_hashtags"`
+	Score       float64    `json:"score"`
+}
+
+func (q *Queries) ScoredJobs(ctx context.Context, arg ScoredJobsParams) ([]ScoredJobsRow, error) {
+	rows, err := q.db.Query(ctx, scoredJobs,
+		arg.Limit,
+		arg.Hashtags,
+		arg.RolePatterns,
+		arg.UserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ScoredJobsRow
+	for rows.Next() {
+		var i ScoredJobsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Source,
+			&i.PublishedAt,
+			&i.Link,
+			&i.Title,
+			&i.Description,
+			&i.CompanyAI,
+			&i.RoleAI,
+			&i.SeniorityAI,
+			&i.OverviewAI,
+			&i.HashtagsAI,
+			&i.Score,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

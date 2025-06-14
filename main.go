@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"launchpad.icu/autopilot/background"
 	"launchpad.icu/autopilot/bot"
 	"launchpad.icu/autopilot/database"
 	"launchpad.icu/autopilot/pkg/aifactory"
@@ -43,5 +44,11 @@ func main() {
 		log.Fatalln("failed to initialize bot:", err)
 	}
 
-	b.Start()
+	bg := background.New(background.Config{
+		Bot: b,
+		DB:  db,
+		AI:  ai,
+	})
+
+	bg.Start()
 }

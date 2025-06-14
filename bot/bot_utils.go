@@ -13,22 +13,31 @@ import (
 
 // SendJSON sends a JSON indented repr of the provided value.
 // If the resulting string is too long, it sends it as a file attachment instead.
-func (b Bot) SendJSON(c tele.Context, v any) error {
+func (b Bot) SendJSON(c tele.Context, v any, prefix ...string) error {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	jsonstr := "```json\n" + string(data) + "\n```"
+	if len(prefix) > 0 {
+		jsonstr = prefix[0] + ":\n" + jsonstr
+	}
 	if utf8.RuneCountInString(jsonstr) <= 4096 {
 		return c.Send(jsonstr, tele.ModeMarkdownV2)
 	}
 
 	go c.Notify(tele.UploadingDocument)
 
+	var caption string
+	if len(prefix) > 0 {
+		caption = prefix[0]
+	}
+
 	return c.Send(&tele.Document{
 		File:     tele.FromReader(bytes.NewReader(data)),
 		FileName: reflect.TypeOf(v).String() + ".json",
+		Caption:  caption,
 	})
 }
 

@@ -54,6 +54,11 @@ func NewFeeder(b Bot) Feeder {
 }
 
 func (f Feeder) Execute() error {
+	if f.off {
+		f.logger.Warn("feeder is off")
+		return nil
+	}
+
 	for source, parser := range feederParsers {
 		logger := f.logger.With("parser", source)
 
@@ -141,18 +146,13 @@ func (f Feeder) insertJob(source string, entry parsers.FeedEntry, overview joban
 func (f Feeder) sendToChannel(source string, entry parsers.FeedEntry, overview jobanalysis.Overview) error {
 	text := f.TextLocale("ua", "feeder.job", struct {
 		parsers.FeedEntry
-		Parser   string
+		Source   string
 		Overview jobanalysis.Overview
 	}{
 		FeedEntry: entry,
-		Parser:    source,
+		Source:    source,
 		Overview:  overview,
 	})
-
-	if f.off {
-		f.logger.Warn("feeder is off, not sending message", "text", text)
-		return nil
-	}
 
 	_, err := f.Send(f.ChatID("jobs_channel"), text, tele.NoPreview)
 	return err

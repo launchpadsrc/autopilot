@@ -1,7 +1,11 @@
 package launchpad
 
 import (
+	"encoding/json"
+
 	"dario.cat/mergo"
+	"github.com/samber/lo"
+	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/pkg/openaix"
 )
@@ -16,7 +20,10 @@ type KickoffStep struct {
 }
 
 func NewKickoffStep(state *State) Step {
-	return &KickoffStep{state: state}
+	return &KickoffStep{
+		state: state,
+		chat:  openaix.Chat[UserProfile](state.ai, "launchpad.01_kickoff"),
+	}
 }
 
 type (
@@ -55,8 +62,20 @@ type (
 	}
 )
 
+func (p UserProfile) StackTags() []string {
+	return lo.Map(p.Stack, func(s UserProfileStack, _ int) string {
+		return s.Tech
+	})
+}
+
+func (p UserProfile) RolePatterns() []string {
+	return lo.Map(p.Roles, func(r string, _ int) string {
+		return "%" + r + "%"
+	})
+}
+
 func (s *KickoffStep) Execute(input string) (*Result, error) {
-	profile, err := s.UserProfile(input)
+	profile, err := s.chat.Completion(input)
 	if err != nil {
 		return nil, err
 	}
@@ -81,9 +100,25 @@ func (s *KickoffStep) Execute(input string) (*Result, error) {
 	return result, nil
 }
 
-func (s *KickoffStep) UserProfile(answers string) (UserProfile, error) {
-	if s.chat == nil {
-		s.chat = openaix.Chat[UserProfile](s.state.ai, "launchpad.01_kickoff")
+type dumpedKickoffStep struct {
+	Profile     *UserProfile                   `json:"profile,omitempty"`
+	ChatHistory []openai.ChatCompletionMessage `json:"chat_history,omitempty"`
+}
+
+func (s *KickoffStep) Dump() (json.RawMessage, error) {
+	return json.Marshal(dumpedKickoffStep{
+		Profile:     s.profile,
+		ChatHistory: s.chat.History,
+	})
+}
+
+func (s *KickoffStep) Load(data json.RawMessage) error {
+	var dumped dumpedKickoffStep
+	if err := json.Unmarshal(data, &dumped); err != nil {
+		return err
 	}
-	return s.chat.Completion(answers)
+
+	s.profile = dumped.Profile
+	s.chat.History = dumped.ChatHistory
+	return nil
 }

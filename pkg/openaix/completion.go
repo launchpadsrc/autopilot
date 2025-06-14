@@ -15,7 +15,7 @@ import (
 type ChatContext[T any] struct {
 	ai      *openai.Client
 	key     string
-	history []openai.ChatCompletionMessage
+	History []openai.ChatCompletionMessage
 }
 
 type (
@@ -74,10 +74,10 @@ func Chat[T any](ai *openai.Client, key string) *ChatContext[T] {
 }
 
 func (cc *ChatContext[T]) Completion(vars ...any) (T, error) {
-	historyBefore := slices.Clone(cc.history)
+	historyBefore := slices.Clone(cc.History)
 	v, err := cc.completion(vars...)
 	if err != nil {
-		cc.history = historyBefore
+		cc.History = historyBefore
 	}
 	return v, err
 }
@@ -118,8 +118,8 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 			Content: r.Prompts.System,
 		})
 	}
-	if len(cc.history) > 0 {
-		req.Messages = append(req.Messages, cc.history...)
+	if len(cc.History) > 0 {
+		req.Messages = append(req.Messages, cc.History...)
 	}
 
 	message := openai.ChatCompletionMessage{
@@ -128,7 +128,7 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 	}
 
 	// Add user message to the history.
-	cc.history = append(cc.history, message)
+	cc.History = append(cc.History, message)
 	req.Messages = append(req.Messages, message)
 
 	res, err := cc.ai.CreateChatCompletion(context.Background(), req)
@@ -143,7 +143,7 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 	content := message.Content
 
 	// Add assistant response to the history.
-	cc.history = append(cc.history, message)
+	cc.History = append(cc.History, message)
 
 	logger := logger.With("id", res.ID, "model", res.Model)
 	logger.Debug("completion raw response", "content", content)

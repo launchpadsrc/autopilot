@@ -10,7 +10,15 @@ import (
 
 type Querier interface {
 	InsertJob(ctx context.Context, arg InsertJobParams) error
+	InsertUser(ctx context.Context, id int64) error
 	JobsExist(ctx context.Context, ids []string) ([]string, error)
+	ScoredJobs(ctx context.Context, arg ScoredJobsParams) ([]ScoredJobsRow, error)
+	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
+	UpdateUserState(ctx context.Context, arg UpdateUserStateParams) error
+	UpsertUserJob(ctx context.Context, arg UpsertUserJobParams) error
+	User(ctx context.Context, id int64) (User, error)
+	UserExists(ctx context.Context, id int64) (bool, error)
+	UsersByState(ctx context.Context, state string) ([]User, error)
 }
 
 var _ Querier = (*Queries)(nil)

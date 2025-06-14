@@ -13,3 +13,18 @@ config:
 
   steps:
     01_kickoff: 3
+
+buttons:
+  targeting.job.like:
+    unique: 'targeting.job.like'
+#    data: '{{ .ID }}'
+    text: '❤️'
+  targeting.job.dislike:
+    unique: 'targeting.job.dislike'
+#    data: '{{ .ID }}'
+    text: '👎'
+
+
+markups:
+  targeting.job:
+    - [targeting.job.like, targeting.job.dislike]

@@ -5,8 +5,53 @@
 package sqlc
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
+
+type UserJobFeedback string
+
+const (
+	UserJobFeedbackScored  UserJobFeedback = "scored"
+	UserJobFeedbackLiked   UserJobFeedback = "liked"
+	UserJobFeedbackDeleted UserJobFeedback = "deleted"
+)
+
+func (e *UserJobFeedback) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UserJobFeedback(s)
+	case string:
+		*e = UserJobFeedback(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UserJobFeedback: %T", src)
+	}
+	return nil
+}
+
+type NullUserJobFeedback struct {
+	UserJobFeedback UserJobFeedback `json:"user_job_feedback"`
+	Valid           bool            `json:"valid"` // Valid is true if UserJobFeedback is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUserJobFeedback) Scan(value interface{}) error {
+	if value == nil {
+		ns.UserJobFeedback, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UserJobFeedback.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUserJobFeedback) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UserJobFeedback), nil
+}
 
 type Job struct {
 	CreatedAt   time.Time  `json:"created_at"`
@@ -21,4 +66,20 @@ type Job struct {
 	SeniorityAI string     `json:"ai_seniority"`
 	OverviewAI  string     `json:"ai_overview"`
 	HashtagsAI  []string   `json:"ai_hashtags"`
+}
+
+type User struct {
+	CreatedAt time.Time `json:"created_at"`
+	ID        int64     `json:"id"`
+	State     string    `json:"state"`
+	StateDump []byte    `json:"state_dump"`
+	Profile   []byte    `json:"profile"`
+}
+
+type UserJob struct {
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
+	UserID    int64           `json:"user_id"`
+	JobID     string          `json:"job_id"`
+	Feedback  UserJobFeedback `json:"feedback"`
 }

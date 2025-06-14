@@ -60,6 +60,7 @@ func (b Bot) Start() {
 
 	b.Use(middleware.Recover())
 	b.Use(b.Layout.Middleware("ua"))
+	b.Use(b.mwState)
 
 	b.Handle("/start", b.onStart)
 	b.Handle(tele.OnText, b.onChat)
@@ -71,12 +72,8 @@ func (b Bot) Start() {
 	b.Bot.Start()
 }
 
-func (b Bot) sendHint(c tele.Context, hint string, v ...any) error {
-	text := "💡 " + hint
-	if len(v) > 0 {
-		text += " " + fmt.Sprintln(v...)
-	}
-	return c.Send(text)
+func (b Bot) sendHint(c tele.Context, v ...any) error {
+	return c.Send("💡 " + fmt.Sprintln(v...))
 }
 
 var templateFuncs = template.FuncMap{
