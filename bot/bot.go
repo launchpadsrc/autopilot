@@ -64,9 +64,9 @@ func (b Bot) Start() {
 
 	b.Handle("/start", b.onStart)
 	b.Handle(tele.OnText, b.onChat)
+	b.Handle(tele.OnDocument, b.onChat)
 	b.Handle("/keywords", b.onKeywords)
 	b.Handle("/resume", b.onResume)
-	b.Handle(tele.OnDocument, b.onResume)
 
 	b.goFeeder()
 	b.Bot.Start()

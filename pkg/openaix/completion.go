@@ -66,8 +66,7 @@ func Completion[T any](ai *openai.Client, key string, vars ...any) (T, error) {
 // Otherwise, it expects the content to be a valid JSON and unmarshals it into T.
 // Preserves the chat history.
 //
-// TODO: Should we use the new Responses API instead?
-// TODO: See: https://platform.openai.com/docs/api-reference/responses.
+// TODO: Should we use the new Responses API instead? See: https://platform.openai.com/docs/api-reference/responses.
 // TODO: Implement logging of requests.
 func Chat[T any](ai *openai.Client, key string) *ChatContext[T] {
 	return &ChatContext[T]{ai: ai, key: key}

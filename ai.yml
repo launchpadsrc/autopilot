@@ -1,6 +1,7 @@
 cv_schema:
     model: gpt-4o
     prompts:
+        # TODO: Use JSON schema for response instead.
         system: |-
             You are an intelligent resume processing assistant.
             
@@ -30,6 +31,7 @@ job_analysis:
     overview:
         model: gpt-4o-mini # ~$0.01 per request
         prompts:
+            # TODO: Use JSON schema for response instead.
             system: |-
                 You are an information extraction system. Your task is to read a job description and return a JSON object that adheres to a specific schema.
                 
@@ -64,6 +66,7 @@ job_analysis:
     keywords_extractor:
         model: gpt-4o-mini
         prompts:
+            # TODO: Use JSON schema for response instead.
             system: |-
                 You are an HR-text miner.
                 Return the top-K technical keywords or key-phrases for the whole set of job ads.

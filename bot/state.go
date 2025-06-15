@@ -136,6 +136,7 @@ func (b Bot) onChat(c tele.Context) error {
 
 	switch stepName {
 	case launchpad.StateKickoff:
+		// TODO: Parse CV from document, adjust the pipeline and profile to consider the CV.
 		expected := launchpad.NewResultOf[launchpad.UserProfile](result)
 		return b.onStateKickoff(c, expected)
 	}
@@ -155,7 +156,8 @@ func (b Bot) onStateKickoff(c tele.Context, result *launchpad.ResultOf[launchpad
 	// TODO: 1. Ask user to verify their profile before changing state.
 	// DONE: 2. Considering the preferences, start "targeting" background task to look for the matching vacancies.
 	// TODO: 3. Mention the fact that these vacancies will be collected continuously until we form a long-list.
-	// TODO: 4. The user should be asked to provide a feedback for each sent vacancy.
+	// TODO: 4. The user should be asked to provide a feedback for each sent vacancy. (human-in-the-loop)?
 	// TODO: 5. Allow user to send their own vacancies, which will be added to the long-list.
 	// TODO: 6. Once the long-list of 30 vacancies is formed, move to the next step.
+	// TODO: 7. While the list is forming, the user can modify their profile, which will affect the targeting process.
 }
