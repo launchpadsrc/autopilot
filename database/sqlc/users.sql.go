@@ -18,6 +18,26 @@ func (q *Queries) InsertUser(ctx context.Context, id int64) error {
 	return err
 }
 
+const resetUser = `-- name: ResetUser :exec
+update users set
+    state = $2,
+    state_dump = null,
+    profile = null,
+    resume = null,
+    resume_file = null
+where id = $1
+`
+
+type ResetUserParams struct {
+	ID    int64  `json:"id"`
+	State string `json:"state"`
+}
+
+func (q *Queries) ResetUser(ctx context.Context, arg ResetUserParams) error {
+	_, err := q.db.Exec(ctx, resetUser, arg.ID, arg.State)
+	return err
+}
+
 const updateUserProfile = `-- name: UpdateUserProfile :exec
 update users set profile = $2 where id = $1
 `
@@ -29,6 +49,21 @@ type UpdateUserProfileParams struct {
 
 func (q *Queries) UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error {
 	_, err := q.db.Exec(ctx, updateUserProfile, arg.ID, arg.Profile)
+	return err
+}
+
+const updateUserResume = `-- name: UpdateUserResume :exec
+update users set resume = $2, resume_file = $3 where id = $1
+`
+
+type UpdateUserResumeParams struct {
+	ID         int64  `json:"id"`
+	Resume     []byte `json:"resume"`
+	ResumeFile []byte `json:"resume_file"`
+}
+
+func (q *Queries) UpdateUserResume(ctx context.Context, arg UpdateUserResumeParams) error {
+	_, err := q.db.Exec(ctx, updateUserResume, arg.ID, arg.Resume, arg.ResumeFile)
 	return err
 }
 
@@ -48,7 +83,7 @@ func (q *Queries) UpdateUserState(ctx context.Context, arg UpdateUserStateParams
 }
 
 const user = `-- name: User :one
-select created_at, id, state, state_dump, profile from users where id = $1
+select created_at, id, state, state_dump, profile, resume, resume_file from users where id = $1
 `
 
 func (q *Queries) User(ctx context.Context, id int64) (User, error) {
@@ -60,6 +95,8 @@ func (q *Queries) User(ctx context.Context, id int64) (User, error) {
 		&i.State,
 		&i.StateDump,
 		&i.Profile,
+		&i.Resume,
+		&i.ResumeFile,
 	)
 	return i, err
 }
@@ -76,7 +113,7 @@ func (q *Queries) UserExists(ctx context.Context, id int64) (bool, error) {
 }
 
 const usersByState = `-- name: UsersByState :many
-select created_at, id, state, state_dump, profile from users where state = $1
+select created_at, id, state, state_dump, profile, resume, resume_file from users where state = $1
 `
 
 func (q *Queries) UsersByState(ctx context.Context, state string) ([]User, error) {
@@ -94,6 +131,8 @@ func (q *Queries) UsersByState(ctx context.Context, state string) ([]User, error
 			&i.State,
 			&i.StateDump,
 			&i.Profile,
+			&i.Resume,
+			&i.ResumeFile,
 		); err != nil {
 			return nil, err
 		}

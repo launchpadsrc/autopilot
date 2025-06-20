@@ -62,8 +62,7 @@ func (bg Background) start(f func(Task) func(context.Context) error, d time.Dura
 		t.logger.Info("triggered")
 
 		elapsed := measure(func() {
-			// TODO: ctx
-			if err := f(t)(context.Background()); err != nil {
+			if err := f(t)(context.Background()); err != nil { // TODO: ctx
 				t.logger.Error("failed", "error", err)
 			}
 		})

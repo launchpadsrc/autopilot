@@ -5,11 +5,9 @@ import (
 	"log/slog"
 	"text/template"
 
+	"github.com/sashabaranov/go-openai"
 	tele "gopkg.in/telebot.v4"
 	"gopkg.in/telebot.v4/layout"
-	"gopkg.in/telebot.v4/middleware"
-
-	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/database"
 	"launchpad.icu/autopilot/pkg/htmlstrip"
@@ -58,15 +56,15 @@ func New(c Config) (*Bot, error) {
 func (b Bot) Start() {
 	slog.Info("starting", "go", "bot")
 
-	b.Use(middleware.Recover())
+	// b.Use(middleware.Recover())
 	b.Use(b.Layout.Middleware("ua"))
-	b.Use(b.mwState)
+	b.Use(b.mwUserState)
 
 	b.Handle("/start", b.onStart)
+	b.Handle("/reset", b.onReset)
 	b.Handle(tele.OnText, b.onChat)
 	b.Handle(tele.OnDocument, b.onChat)
 	b.Handle("/keywords", b.onKeywords)
-	b.Handle("/resume", b.onResume)
 
 	b.goFeeder()
 	b.Bot.Start()

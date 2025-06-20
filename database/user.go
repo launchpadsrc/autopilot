@@ -34,3 +34,11 @@ func (user User) UpdateProfile(ctx context.Context, profile any) error {
 		Profile: jsondump.DumpBytes(profile),
 	})
 }
+
+func (user User) UpdateResume(ctx context.Context, resume any, file []byte) error {
+	return user.q.UpdateUserResume(ctx, sqlc.UpdateUserResumeParams{
+		ID:         user.ID,
+		Resume:     jsondump.DumpBytes(resume),
+		ResumeFile: file,
+	})
+}

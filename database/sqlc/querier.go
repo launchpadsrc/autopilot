@@ -12,8 +12,10 @@ type Querier interface {
 	InsertJob(ctx context.Context, arg InsertJobParams) error
 	InsertUser(ctx context.Context, id int64) error
 	JobsExist(ctx context.Context, ids []string) ([]string, error)
+	ResetUser(ctx context.Context, arg ResetUserParams) error
 	ScoredJobs(ctx context.Context, arg ScoredJobsParams) ([]ScoredJobsRow, error)
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) error
+	UpdateUserResume(ctx context.Context, arg UpdateUserResumeParams) error
 	UpdateUserState(ctx context.Context, arg UpdateUserStateParams) error
 	UpsertUserJob(ctx context.Context, arg UpsertUserJobParams) error
 	User(ctx context.Context, id int64) (User, error)

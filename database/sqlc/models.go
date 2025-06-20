@@ -69,11 +69,13 @@ type Job struct {
 }
 
 type User struct {
-	CreatedAt time.Time `json:"created_at"`
-	ID        int64     `json:"id"`
-	State     string    `json:"state"`
-	StateDump []byte    `json:"state_dump"`
-	Profile   []byte    `json:"profile"`
+	CreatedAt  time.Time `json:"created_at"`
+	ID         int64     `json:"id"`
+	State      string    `json:"state"`
+	StateDump  []byte    `json:"state_dump"`
+	Profile    []byte    `json:"profile"`
+	Resume     []byte    `json:"resume"`
+	ResumeFile []byte    `json:"resume_file"`
 }
 
 type UserJob struct {

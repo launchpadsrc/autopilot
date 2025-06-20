@@ -30,7 +30,6 @@ type Dumpable interface {
 // Result represents the result of a step execution.
 type Result struct {
 	// Wrapped is a generic wrapper for the step's output.
-	// To access the actual data, use wrap.Unwrap[T](result.Wrapped).
 	Wrapped any
 	// Problems indicates if there were any issues during the step execution.
 	// A presence of problems typically means the state should not be transitioned.
@@ -41,7 +40,7 @@ type Result struct {
 
 // ResultOf is a generic wrapper for the Result type.
 type ResultOf[T any] struct {
-	Result
+	*Result
 	Value T
 }
 
@@ -53,13 +52,13 @@ func NewResult(v any) *Result {
 // NewResultOf creates a new ResultOf[T] with unwrapped value.
 func NewResultOf[T any](r *Result) *ResultOf[T] {
 	v, _ := r.Wrapped.(T)
-	return &ResultOf[T]{Value: v}
+	return &ResultOf[T]{Result: r, Value: v}
 }
 
 // State represents a finite state machine for managing the launchpad steps of the user.
 type State struct {
 	ai    *openai.Client
-	fsm   *FSM
+	FSM   *FSM // FIXME: merge with State
 	steps map[string]Step
 }
 
@@ -67,13 +66,18 @@ type State struct {
 func NewState(ai *openai.Client) *State {
 	s := &State{
 		ai:    ai,
-		fsm:   NewFSM(),
+		FSM:   NewFSM(),
 		steps: make(map[string]Step),
 	}
+	s.Clear()
+	return s
+}
+
+func (s *State) Clear() {
+	s.steps = make(map[string]Step)
 	for name, newFunc := range stepsNew {
 		s.steps[name] = newFunc(s)
 	}
-	return s
 }
 
 // Execute runs the current step with the provided input.
@@ -83,13 +87,13 @@ func (s *State) Execute(input string) (*Result, error) {
 }
 
 func (s *State) Transition() error {
-	return s.fsm.Transition()
+	return s.FSM.Transition()
 }
 
 // Current returns the current state name and the corresponding step.
 func (s *State) Current() (string, Step) {
-	state := s.fsm.Current()
-	return state, s.steps[state]
+	state := s.FSM.Current()
+	return state, s.steps[state] // FIXME: nil
 }
 
 // Dump dumps the state into JSON.
@@ -119,7 +123,7 @@ func LoadState(ai *openai.Client, current string, dump json.RawMessage) (*State,
 	}
 
 	state := NewState(ai)
-	state.fsm.SetState(current)
+	state.FSM.SetState(current)
 
 	for name, step := range stepsDump {
 		dumpable, ok := state.steps[name].(Dumpable)

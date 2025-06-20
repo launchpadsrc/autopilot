@@ -35,6 +35,9 @@ func (f *FSM) SetState(state string) {
 func (f *FSM) Current() string {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.current >= len(f.states) {
+		return ""
+	}
 	return f.states[f.current]
 }
 

@@ -49,7 +49,7 @@ func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
 	}
 
 	jobs = lo.Filter(jobs, func(job sqlc.ScoredJobsRow, _ int) bool {
-		return job.Score >= 1.2
+		return job.Score >= 1.2 // TODO: const
 	})
 
 	for _, job := range jobs {
