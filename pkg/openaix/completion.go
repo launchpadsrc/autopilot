@@ -9,8 +9,15 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/invopop/jsonschema"
 	"github.com/sashabaranov/go-openai"
 )
+
+var reflector = &jsonschema.Reflector{
+	DoNotReference: true,
+	ExpandedStruct: true,
+	Anonymous:      true,
+}
 
 type ChatContext[T any] struct {
 	ai      *openai.Client
@@ -36,6 +43,7 @@ type (
 		Name        string     `mapstructure:"name"`
 		Description string     `mapstructure:"description"`
 		Strict      bool       `mapstructure:"strict"`
+		Reflect     bool       `mapstructure:"reflect"`
 		Schema      JSONSchema `mapstructure:"schema"`
 	}
 )
@@ -100,13 +108,20 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 	}
 
 	if r.JSON != nil {
+		var schema json.Marshaler
+		if r.JSON.Reflect {
+			schema = reflector.Reflect(&v)
+		} else {
+			schema = r.JSON.Schema
+		}
+
 		req.ResponseFormat = &openai.ChatCompletionResponseFormat{
 			Type: openai.ChatCompletionResponseFormatTypeJSONSchema,
 			JSONSchema: &openai.ChatCompletionResponseFormatJSONSchema{
 				Name:        r.JSON.Name,
 				Description: r.JSON.Description,
-				Schema:      r.JSON.Schema,
 				Strict:      r.JSON.Strict,
+				Schema:      schema,
 			},
 		}
 	}
