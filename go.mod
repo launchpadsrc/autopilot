@@ -6,6 +6,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/jackc/pgx/v5 v5.7.5
+	github.com/labstack/echo/v4 v4.13.4
 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.24.3
@@ -29,8 +30,9 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
-	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -46,6 +48,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect

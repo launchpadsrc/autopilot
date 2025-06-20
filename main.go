@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"launchpad.icu/autopilot/api"
 	"launchpad.icu/autopilot/background"
 	"launchpad.icu/autopilot/bot"
 	"launchpad.icu/autopilot/database"
@@ -49,6 +50,13 @@ func main() {
 		DB:  db,
 		AI:  ai,
 	})
+	go bg.Start()
 
-	bg.Start()
+	s := api.New(api.Config{
+		Addr: os.Getenv("SERVER_ADDR"),
+		DB:   db,
+	})
+	if err := s.Start(); err != nil {
+		log.Fatalln("failed to start server:", err)
+	}
 }
