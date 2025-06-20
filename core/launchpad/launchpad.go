@@ -29,30 +29,29 @@ type Dumpable interface {
 
 // Result represents the result of a step execution.
 type Result struct {
-	// Wrapped is a generic wrapper for the step's output.
-	Wrapped any
-	// Problems indicates if there were any issues during the step execution.
-	// A presence of problems typically means the state should not be transitioned.
-	Problems bool
+	// Value is a generic wrapper for the step's output.
+	Value any `json:"value"`
 	// Response is the message to be sent back to the user.
-	Response string
+	Response string `json:"assistant_response,omitempty"`
 }
 
 // ResultOf is a generic wrapper for the Result type.
 type ResultOf[T any] struct {
 	*Result
-	Value T
-}
-
-// NewResult creates a new Result with the provided value wrapped.
-func NewResult(v any) *Result {
-	return &Result{Wrapped: v}
+	Value T `json:"value"`
 }
 
 // NewResultOf creates a new ResultOf[T] with unwrapped value.
 func NewResultOf[T any](r *Result) *ResultOf[T] {
-	v, _ := r.Wrapped.(T)
+	v, _ := r.Value.(T)
 	return &ResultOf[T]{Result: r, Value: v}
+}
+
+func (r *ResultOf[T]) OfAny() *Result {
+	return &Result{
+		Value:    r.Value,
+		Response: r.Response,
+	}
 }
 
 // State represents a finite state machine for managing the launchpad steps of the user.

@@ -15,29 +15,28 @@ import (
 // Conversation history and context are maintained.
 type KickoffStep struct {
 	state   *State
-	chat    *openaix.ChatContext[UserProfile]
+	chat    *openaix.ChatContext[ResultOf[UserProfile]]
 	profile *UserProfile
 }
 
 func NewKickoffStep(state *State) Step {
 	return &KickoffStep{
 		state: state,
-		chat:  openaix.Chat[UserProfile](state.ai, "launchpad.01_kickoff"),
+		chat:  openaix.Chat[ResultOf[UserProfile]](state.ai, "launchpad.01_kickoff"),
 	}
 }
 
 type (
 	UserProfile struct {
-		Roles             []string             `json:"roles"`
-		Stack             []UserProfileStack   `json:"stack"`
-		Motivation        string               `json:"motivation"`
-		English           string               `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
-		WeeklyHours       int                  `json:"weekly_hours" jsonschema:"minimum=1"`
-		Salary            UserProfileSalary    `json:"salary"`
-		Assets            UserProfileAssets    `json:"assets"`
-		Problems          []UserProfileProblem `json:"problems"`
-		Observations      []string             `json:"observations"`
-		AssistantResponse string               `json:"assistant_response"`
+		Roles        []string             `json:"roles"`
+		Stack        []UserProfileStack   `json:"stack"`
+		Motivation   string               `json:"motivation"`
+		English      string               `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
+		WeeklyHours  int                  `json:"weekly_hours" jsonschema:"minimum=1"`
+		Salary       UserProfileSalary    `json:"salary"`
+		Assets       UserProfileAssets    `json:"assets"`
+		Problems     []UserProfileProblem `json:"problems"`
+		Observations []string             `json:"observations"`
 	}
 
 	UserProfileStack struct {
@@ -75,13 +74,14 @@ func (p UserProfile) RolePatterns() []string {
 }
 
 func (s *KickoffStep) Execute(input string) (*Result, error) {
-	profile, err := s.chat.Completion(input)
+	result, err := s.chat.Completion(input)
 	if err != nil {
 		return nil, err
 	}
 
+	profile := &result.Value
 	if s.profile == nil {
-		s.profile = &profile
+		s.profile = profile
 	} else {
 		// Merge profiles in case LLM fails to consider chat history.
 		if err := mergo.Merge(s.profile, profile); err != nil {
@@ -89,15 +89,7 @@ func (s *KickoffStep) Execute(input string) (*Result, error) {
 		}
 	}
 
-	result := NewResult(profile)
-	if len(profile.Problems) == 0 {
-		return result, nil
-	}
-
-	// Indicate about problems needed to be solved.
-	result.Problems = true
-	result.Response = profile.AssistantResponse
-	return result, nil
+	return result.OfAny(), nil
 }
 
 type dumpedKickoffStep struct {

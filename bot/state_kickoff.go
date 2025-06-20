@@ -20,7 +20,7 @@ func (b Bot) onStateKickoff(c tele.Context, result *launchpad.ResultOf[launchpad
 		}
 	}
 
-	if result.Problems {
+	if len(result.Value.Problems) > 0 {
 		return c.Send(result.Response)
 	}
 
