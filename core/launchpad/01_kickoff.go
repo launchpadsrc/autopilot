@@ -31,8 +31,8 @@ type (
 		Roles             []string             `json:"roles"`
 		Stack             []UserProfileStack   `json:"stack"`
 		Motivation        string               `json:"motivation"`
-		English           string               `json:"english"`
-		WeeklyHours       int                  `json:"weekly_hours"`
+		English           string               `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
+		WeeklyHours       int                  `json:"weekly_hours" jsonschema:"minimum=1"`
 		Salary            UserProfileSalary    `json:"salary"`
 		Assets            UserProfileAssets    `json:"assets"`
 		Problems          []UserProfileProblem `json:"problems"`
@@ -42,22 +42,22 @@ type (
 
 	UserProfileStack struct {
 		Tech  string `json:"tech"`
-		Level int    `json:"level"`
+		Level int    `json:"level" jsonschema:"minimum=0,maximum=5"`
 	}
 
 	UserProfileSalary struct {
 		Range    string `json:"range"`
-		Currency string `json:"currency"`
+		Currency string `json:"currency" jsonschema:"enum=USD,enum=EUR,enum=UAH"`
 	}
 
 	UserProfileAssets struct {
-		Github   *string  `json:"github"`
+		Github   string   `json:"github"`
+		Linkedin string   `json:"linkedin"`
 		Projects []string `json:"projects"`
-		CvLink   *string  `json:"cv_link"`
 	}
 
 	UserProfileProblem struct {
-		Problem string `json:"problem"`
+		Problem string `json:"problem" jsonschema:"enum=MISSING_FIELD,enum=BAD_FORMAT,enum=AMBIGUOUS_VALUE"`
 		Reason  string `json:"reason"`
 	}
 )
