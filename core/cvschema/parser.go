@@ -2,13 +2,12 @@ package cvschema
 
 import (
 	"bytes"
-	"io"
-	"strings"
+	"log/slog"
 
-	"github.com/ledongthuc/pdf"
 	"github.com/sashabaranov/go-openai"
 
 	"launchpad.icu/autopilot/pkg/openaix"
+	"launchpad.icu/autopilot/pkg/poppler"
 )
 
 type Parser struct {
@@ -21,25 +20,10 @@ func NewParser(ai *openai.Client) Parser {
 
 // Parse parses a PDF resume and returns a structured Resume object.
 func (p Parser) Parse(pdf []byte) (*Resume, error) {
-	content, err := p.readPDF(bytes.NewReader(pdf))
+	content, err := poppler.ToHTML(bytes.NewReader(pdf))
 	if err != nil {
 		return nil, err
 	}
+	slog.Debug("converted pdf to html", "content", content)
 	return openaix.Completion[*Resume](p.ai, "cv_schema", content)
-}
-
-func (p Parser) readPDF(raw *bytes.Reader) (string, error) {
-	reader, err := pdf.NewReader(raw, raw.Size())
-	if err != nil {
-		return "", err
-	}
-	b, err := reader.GetPlainText()
-	if err != nil {
-		return "", err
-	}
-	text, err := io.ReadAll(b)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(text)), nil
 }

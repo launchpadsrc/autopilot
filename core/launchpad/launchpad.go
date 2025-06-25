@@ -2,6 +2,7 @@ package launchpad
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -55,10 +56,11 @@ func (r *ResultOf[T]) OfAny() *Result {
 }
 
 // State represents a finite state machine for managing the launchpad steps of the user.
+// FIXME: This is a state machine.
 type State struct {
 	ai    *openai.Client
-	FSM   *FSM // FIXME: merge with State
-	steps map[string]Step
+	FSM   *FSM            // FIXME: Merge with current struct.
+	steps map[string]Step // FIXME: These are states, not steps.
 }
 
 // NewState initializes a new State.
@@ -82,6 +84,9 @@ func (s *State) Clear() {
 // Execute runs the current step with the provided input.
 func (s *State) Execute(input string) (*Result, error) {
 	_, step := s.Current()
+	if step == nil {
+		return nil, errors.New("current step is not implemented")
+	}
 	return step.Execute(input)
 }
 
@@ -92,7 +97,7 @@ func (s *State) Transition() error {
 // Current returns the current state name and the corresponding step.
 func (s *State) Current() (string, Step) {
 	state := s.FSM.Current()
-	return state, s.steps[state] // FIXME: nil
+	return state, s.steps[state]
 }
 
 // Dump dumps the state into JSON.

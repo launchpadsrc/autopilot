@@ -159,9 +159,6 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 	// Add assistant response to the history.
 	cc.History = append(cc.History, message)
 
-	logger := logger.With("id", res.ID, "model", res.Model)
-	logger.Debug("completion raw response", "content", content)
-
 	// If the type T is a string, return the content directly.
 	// Otherwise, unmarshal the content into the provided type T.
 	if _, ok := any(v).(string); ok {
@@ -183,7 +180,9 @@ func (cc *ChatContext[T]) completion(vars ...any) (v T, _ error) {
 		return v, fmt.Errorf("openaix: %w", err)
 	}
 
+	logger := logger.With("id", res.ID, "model", res.Model)
 	logger.Debug("completion compact response", "content", compact.String())
+
 	if err := json.NewDecoder(compact).Decode(&v); err != nil {
 		return v, fmt.Errorf("openaix: %w", err)
 	}
