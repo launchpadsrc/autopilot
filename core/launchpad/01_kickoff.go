@@ -2,6 +2,7 @@ package launchpad
 
 import (
 	"encoding/json"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/samber/lo"
@@ -63,7 +64,7 @@ type (
 
 func (p UserProfile) StackTags() []string {
 	return lo.Map(p.Stack, func(s UserProfileStack, _ int) string {
-		return s.Tech
+		return strings.ToLower(s.Tech)
 	})
 }
 

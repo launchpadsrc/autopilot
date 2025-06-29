@@ -5,8 +5,11 @@ go 1.24.2
 require (
 	dario.cat/mergo v1.0.2
 	github.com/PuerkitoBio/goquery v1.10.3
+	github.com/bbalet/stopwords v1.0.0
+	github.com/blevesearch/segment v0.9.1
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jackc/pgx/v5 v5.7.5
+	github.com/kljensen/snowball v0.10.0
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/pressly/goose/v3 v3.24.3

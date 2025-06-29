@@ -116,9 +116,17 @@ with ranked as (
         ))::numeric
         as tech_match,
 
+        /* resume keywords overlap */
+        cardinality(array(
+            select unnest(j.ai_hashtags)
+            intersect
+            select unnest($3::text[])
+        ))::numeric
+        as cv_match,
+
         /* role keyword match */
         case
-            when j.ai_role ilike any ($3::text[])
+            when j.ai_role ilike any ($4::text[])
             then 1
             else 0
         end::numeric
@@ -134,7 +142,7 @@ with ranked as (
     from
         jobs as j
     left join user_jobs as uj
-        on uj.job_id = j.id and uj.user_id = $4
+        on uj.job_id = j.id and uj.user_id = $5
     where
         uj.job_id is null
 )
@@ -150,7 +158,14 @@ select
     ai_seniority,
     ai_overview,
     ai_hashtags,
-    (tech_match + role_match * 0.8 + seniority_boost)::double precision AS score
+    /* final weighted score */
+    (
+        tech_match +
+        cv_match * 0.7 +
+        role_match * 0.8 +
+        seniority_boost
+    )::double precision
+    as score
 from
     ranked
 order by
@@ -161,10 +176,11 @@ limit
 `
 
 type ScoredJobsParams struct {
-	Limit        int32    `json:"limit"`
-	Hashtags     []string `json:"hashtags"`
-	RolePatterns []string `json:"role_patterns"`
-	UserID       int64    `json:"user_id"`
+	Limit          int32    `json:"limit"`
+	Hashtags       []string `json:"hashtags"`
+	ResumeKeywords []string `json:"resume_keywords"`
+	RolePatterns   []string `json:"role_patterns"`
+	UserID         int64    `json:"user_id"`
 }
 
 type ScoredJobsRow struct {
@@ -186,6 +202,7 @@ func (q *Queries) ScoredJobs(ctx context.Context, arg ScoredJobsParams) ([]Score
 	rows, err := q.db.Query(ctx, scoredJobs,
 		arg.Limit,
 		arg.Hashtags,
+		arg.ResumeKeywords,
 		arg.RolePatterns,
 		arg.UserID,
 	)

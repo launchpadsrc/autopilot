@@ -45,6 +45,7 @@ type Feeder struct {
 	off    bool
 }
 
+// TODO: Move to background/feeder.go.
 func NewFeeder(b Bot) Feeder {
 	return Feeder{
 		Bot:    b,

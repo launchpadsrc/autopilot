@@ -51,6 +51,14 @@ with ranked as (
         ))::numeric
         as tech_match,
 
+        /* resume keywords overlap */
+        cardinality(array(
+            select unnest(j.ai_hashtags)
+            intersect
+            select unnest(sqlc.arg('resume_keywords')::text[])
+        ))::numeric
+        as cv_match,
+
         /* role keyword match */
         case
             when j.ai_role ilike any (sqlc.arg('role_patterns')::text[])
@@ -85,7 +93,14 @@ select
     ai_seniority,
     ai_overview,
     ai_hashtags,
-    (tech_match + role_match * 0.8 + seniority_boost)::double precision AS score
+    /* final weighted score */
+    (
+        tech_match +
+        cv_match * 0.7 +
+        role_match * 0.8 +
+        seniority_boost
+    )::double precision
+    as score
 from
     ranked
 order by

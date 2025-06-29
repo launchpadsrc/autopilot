@@ -3,10 +3,12 @@ package background
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/samber/lo"
 	tele "gopkg.in/telebot.v4"
 
+	"launchpad.icu/autopilot/core/cvschema"
 	"launchpad.icu/autopilot/core/launchpad"
 	"launchpad.icu/autopilot/database/sqlc"
 )
@@ -36,12 +38,26 @@ func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
 		return err
 	}
 
-	params := sqlc.ScoredJobsParams{
-		UserID:       user.ID,
-		Hashtags:     profile.StackTags(),
-		RolePatterns: profile.RolePatterns(),
-		Limit:        5,
+	var resume cvschema.Resume
+	if err := json.Unmarshal(user.Resume, &resume); err != nil {
+		return err
 	}
+
+	params := sqlc.ScoredJobsParams{
+		UserID:         user.ID,
+		Hashtags:       profile.StackTags(),
+		RolePatterns:   profile.RolePatterns(),
+		ResumeKeywords: resume.Keywords(),
+		Limit:          5,
+	}
+
+	slog.Debug(
+		"targeting params",
+		"user_id", user.ID,
+		"hashtags", params.Hashtags,
+		"role_patterns", params.RolePatterns,
+		"keywords", params.ResumeKeywords,
+	)
 
 	jobs, err := bg.db.ScoredJobs(ctx, params)
 	if err != nil || len(jobs) == 0 {
@@ -49,7 +65,7 @@ func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
 	}
 
 	jobs = lo.Filter(jobs, func(job sqlc.ScoredJobsRow, _ int) bool {
-		return job.Score >= 1.2 // TODO: const
+		return job.Score >= 3.0 // TODO: const
 	})
 
 	for _, job := range jobs {
