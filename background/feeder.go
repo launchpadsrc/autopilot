@@ -23,16 +23,16 @@ var feederParsers = map[string]parsers.Parser{
 }
 
 func (bg Background) Feeder(t Task) Func {
-	var (
-		off   = os.Getenv("FEEDER_OFF") == "true"
-		proxy = os.Getenv("FEEDER_PROXY")
-	)
-	return func(ctx context.Context) error {
-		if off {
-			t.logger.Warn("feeder is off")
-			return nil
-		}
+	if os.Getenv("FEEDER_OFF") == "true" {
+		return nil
+	}
 
+	proxy := os.Getenv("FEEDER_PROXY")
+	if proxy != "" {
+		t.logger.Debug("proxy set", "proxy", proxy)
+	}
+
+	return func(ctx context.Context) error {
 		var errs errgroup.Group
 		for source, parser := range feederParsers {
 			errs.Go((feeder{
@@ -44,7 +44,6 @@ func (bg Background) Feeder(t Task) Func {
 		}
 		return errs.Wait()
 	}
-
 }
 
 type feeder struct {

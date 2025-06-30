@@ -49,22 +49,22 @@ func (bg Background) Start() {
 	bg.b.Start()
 }
 
-func (bg Background) start(f func(Task) Func, d time.Duration) {
+func (bg Background) start(taskFunc func(Task) Func, d time.Duration) {
 	t := Task{
-		logger: bg.logger.With("task", funcName(f)),
+		logger: bg.logger.With("task", funcName(taskFunc)),
 	}
 
-	measure := func(f func()) time.Duration {
-		start := time.Now()
-		f()
-		return time.Since(start)
+	f := taskFunc(t)
+	if f == nil {
+		t.logger.Warn("task is disabled")
+		return
 	}
 
 	for {
 		t.logger.Info("triggered")
 
 		elapsed := measure(func() {
-			if err := f(t)(context.Background()); err != nil { // TODO: ctx
+			if err := f(context.Background()); err != nil { // TODO: ctx
 				t.logger.Error("failed", "error", err)
 			}
 		})
@@ -78,4 +78,10 @@ func (bg Background) start(f func(Task) Func, d time.Duration) {
 func funcName(f any) string {
 	n := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 	return strings.TrimSuffix(n[strings.LastIndex(n, ".")+1:], "-fm")
+}
+
+func measure(f func()) time.Duration {
+	start := time.Now()
+	f()
+	return time.Since(start)
 }
