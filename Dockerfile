@@ -1,4 +1,4 @@
-FROM golang:1.24.2 AS builder
+FROM golang:1.24.2-alpine AS builder
 
 WORKDIR /app
 
@@ -10,9 +10,11 @@ COPY . .
 
 RUN go build -o main .
 
-FROM gcr.io/distroless/base
+FROM alpine
 
 WORKDIR /app
+
+RUN apk add poppler-utils
 
 COPY --from=builder /app/main .
 
