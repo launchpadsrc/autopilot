@@ -37,17 +37,19 @@ func New(c Config) Background {
 	}
 }
 
-type Task struct {
-	logger *slog.Logger
-}
+type (
+	Task struct{ logger *slog.Logger }
+	Func = func(context.Context) error
+)
 
 func (bg Background) Start() {
+	go bg.start(bg.Feeder, time.Minute)
 	go bg.start(bg.Targeting, time.Minute)
 
 	bg.b.Start()
 }
 
-func (bg Background) start(f func(Task) func(context.Context) error, d time.Duration) {
+func (bg Background) start(f func(Task) Func, d time.Duration) {
 	t := Task{
 		logger: bg.logger.With("task", funcName(f)),
 	}

@@ -13,7 +13,7 @@ import (
 	"launchpad.icu/autopilot/database/sqlc"
 )
 
-func (bg Background) Targeting(t Task) func(ctx context.Context) error {
+func (bg Background) Targeting(t Task) Func {
 	return func(ctx context.Context) error {
 		users, err := bg.db.UsersByState(ctx, launchpad.StateTargeting)
 		if err != nil {

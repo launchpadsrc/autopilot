@@ -1,4 +1,4 @@
-FROM golang:1.24.1 AS builder
+FROM golang:1.24.2 AS builder
 
 WORKDIR /app
 
@@ -20,6 +20,8 @@ COPY --from=builder /app/bot.yml .
 
 COPY --from=builder /app/bot/locales ./bot/locales
 
-COPY --from=builder /app/prompts.yml .
+COPY --from=builder /app/ai.yml .
+
+COPY --from=builder /app/database/migrations ./database/migrations
 
 CMD ["./main"]
