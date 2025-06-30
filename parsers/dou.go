@@ -13,13 +13,17 @@ import (
 )
 
 type Dou struct {
-	client *http.Client
+	c *http.Client
 }
 
 func NewDou() Dou {
 	return Dou{
-		client: &http.Client{},
+		c: &http.Client{},
 	}
+}
+
+func (d Dou) client() *http.Client {
+	return d.c
 }
 
 func (Dou) Host() string {
@@ -27,7 +31,7 @@ func (Dou) Host() string {
 }
 
 func (d Dou) ParseJob(url string) (*Job, error) {
-	resp, err := d.client.Get(url)
+	resp, err := d.c.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch URL: %w", err)
 	}

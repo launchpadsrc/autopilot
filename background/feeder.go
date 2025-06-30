@@ -17,25 +17,28 @@ import (
 	"launchpad.icu/autopilot/pkg/jsondump"
 )
 
+var feederParsers = map[string]parsers.Parser{
+	"djinni.co":   parsers.NewDjinni(),
+	"jobs.dou.ua": parsers.NewDou(),
+}
+
 func (bg Background) Feeder(t Task) Func {
-	off := os.Getenv("FEEDER_OFF") == "true"
+	var (
+		off   = os.Getenv("FEEDER_OFF") == "true"
+		proxy = os.Getenv("FEEDER_PROXY")
+	)
 	return func(ctx context.Context) error {
 		if off {
 			t.logger.Warn("feeder is off")
 			return nil
 		}
 
-		ps := map[string]parsers.Parser{
-			"djinni.co":   parsers.NewDjinni(),
-			"jobs.dou.ua": parsers.NewDou(),
-		}
-
 		var errs errgroup.Group
-		for source, p := range ps {
+		for source, parser := range feederParsers {
 			errs.Go((feeder{
 				Background: bg,
-				parser:     p,
 				source:     source,
+				parser:     parsers.WithProxy(parser, proxy),
 				logger:     t.logger.With("parser", source),
 			}).execute)
 		}

@@ -13,13 +13,17 @@ import (
 )
 
 type Djinni struct {
-	client *http.Client
+	c *http.Client
 }
 
 func NewDjinni() Djinni {
 	return Djinni{
-		client: &http.Client{},
+		c: &http.Client{},
 	}
+}
+
+func (d Djinni) client() *http.Client {
+	return d.c
 }
 
 func (Djinni) Host() string {
@@ -27,7 +31,7 @@ func (Djinni) Host() string {
 }
 
 func (d Djinni) ParseJob(url string) (*Job, error) {
-	resp, err := d.client.Get(url)
+	resp, err := d.c.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch URL: %w", err)
 	}
