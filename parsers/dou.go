@@ -81,7 +81,10 @@ var locationsInUA = []string{"віддалено", "за кордоном"}
 func (d Dou) ParseFeed() ([]FeedEntry, error) {
 	const url = "https://jobs.dou.ua/vacancies/feeds/"
 
-	f, err := gofeed.NewParser().ParseURL(url)
+	p := gofeed.NewParser()
+	p.Client = d.client()
+
+	f, err := p.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}

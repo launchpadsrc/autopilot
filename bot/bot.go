@@ -50,10 +50,11 @@ func New(c Config) (*Bot, error) {
 	}
 
 	return &Bot{
-		Layout: lt,
-		Bot:    b,
-		db:     c.DB,
-		ai:     c.AI,
+		Layout:  lt,
+		Bot:     b,
+		db:      c.DB,
+		ai:      c.AI,
+		parsers: c.Parsers,
 	}, nil
 }
 

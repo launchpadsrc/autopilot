@@ -103,7 +103,10 @@ func (Djinni) findJob(doc *goquery.Document) (job *jobJSONLD) {
 func (d Djinni) ParseFeed() ([]FeedEntry, error) {
 	const url = "https://djinni.co/jobs/rss/?company_type=outsource&company_type=outstaff&company_type=product&company_type=startup"
 
-	f, err := gofeed.NewParser().ParseURL(url)
+	p := gofeed.NewParser()
+	p.Client = d.client()
+
+	f, err := p.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
