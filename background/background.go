@@ -13,27 +13,31 @@ import (
 
 	"launchpad.icu/autopilot/bot"
 	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/parsers"
 )
 
 type Config struct {
-	Bot *bot.Bot
-	DB  *database.DB
-	AI  *openai.Client
+	Bot     *bot.Bot
+	DB      *database.DB
+	AI      *openai.Client
+	Parsers map[string]parsers.Parser
 }
 
 type Background struct {
-	b      *bot.Bot
-	db     *database.DB
-	ai     *openai.Client
-	logger *slog.Logger
+	b       *bot.Bot
+	db      *database.DB
+	ai      *openai.Client
+	parsers map[string]parsers.Parser
+	logger  *slog.Logger
 }
 
 func New(c Config) Background {
 	return Background{
-		b:      c.Bot,
-		db:     c.DB,
-		ai:     c.AI,
-		logger: slog.Default().With("go", "background"),
+		b:       c.Bot,
+		db:      c.DB,
+		ai:      c.AI,
+		parsers: c.Parsers,
+		logger:  slog.Default().With("go", "background"),
 	}
 }
 

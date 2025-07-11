@@ -26,7 +26,7 @@ func (b Bot) State(c tele.Context) *launchpad.State {
 	return state
 }
 
-func (b Bot) mwUserState(next tele.HandlerFunc) tele.HandlerFunc {
+func (b Bot) withUserState(next tele.HandlerFunc) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		exists, _ := b.db.UserExists(context.Background(), c.Sender().ID)
 		if !exists && strings.HasPrefix(c.Text(), "/start") {

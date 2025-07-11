@@ -9,6 +9,7 @@ commands:
   /keywords: Extract keywords from job offers
 
 config:
+  admin_id: 366643327
   jobs_channel: -1002615826128
 
   steps:

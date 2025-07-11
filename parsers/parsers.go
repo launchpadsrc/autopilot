@@ -29,7 +29,7 @@ func WithProxy[P Parser](parser P, proxy string) P {
 		return parser
 	}
 
-	uri, err := url.Parse(proxy)
+	uri, err := url.ParseRequestURI(proxy)
 	if err != nil {
 		slog.Warn(
 			"proxy is not enabled",

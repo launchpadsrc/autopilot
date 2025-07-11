@@ -10,6 +10,7 @@ import (
 	"launchpad.icu/autopilot/background"
 	"launchpad.icu/autopilot/bot"
 	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/parsers"
 	"launchpad.icu/autopilot/pkg/aifactory"
 	"launchpad.icu/autopilot/pkg/openaix"
 )
@@ -40,15 +41,25 @@ func main() {
 		log.Fatalln("failed to initialize openaix:", err)
 	}
 
-	b, err := bot.New(bot.Config{DB: db, AI: ai})
+	parsers := map[string]parsers.Parser{
+		"djinni.co":   parsers.NewDjinni(),
+		"jobs.dou.ua": parsers.NewDou(),
+	}
+
+	b, err := bot.New(bot.Config{
+		DB:      db,
+		AI:      ai,
+		Parsers: parsers,
+	})
 	if err != nil {
 		log.Fatalln("failed to initialize bot:", err)
 	}
 
 	bg := background.New(background.Config{
-		Bot: b,
-		DB:  db,
-		AI:  ai,
+		Bot:     b,
+		DB:      db,
+		AI:      ai,
+		Parsers: parsers,
 	})
 	go bg.Start()
 

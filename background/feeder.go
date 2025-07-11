@@ -17,24 +17,20 @@ import (
 	"launchpad.icu/autopilot/pkg/jsondump"
 )
 
-var feederParsers = map[string]parsers.Parser{
-	"djinni.co":   parsers.NewDjinni(),
-	"jobs.dou.ua": parsers.NewDou(),
-}
-
 func (bg Background) Feeder(t Task) Func {
 	if os.Getenv("FEEDER_OFF") == "true" {
 		return nil
 	}
 
-	proxy := os.Getenv("FEEDER_PROXY")
-	if proxy != "" {
-		t.logger.Debug("proxy set", "proxy", proxy)
-	}
-
 	return func(ctx context.Context) error {
+		// A proxy can be modified in runtime.
+		proxy := os.Getenv("FEEDER_PROXY")
+		if proxy != "" {
+			t.logger.Debug("proxy set", "proxy", proxy)
+		}
+
 		var errs errgroup.Group
-		for source, parser := range feederParsers {
+		for source, parser := range bg.parsers {
 			errs.Go((feeder{
 				Background: bg,
 				source:     source,
