@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 	"text/template"
 
 	"github.com/sashabaranov/go-openai"
@@ -93,6 +94,7 @@ func (b Bot) sendDebug(c tele.Context, v any) {
 
 var templateFuncs = template.FuncMap{
 	"htmlstrip": htmlstrip.Strip,
+	"title":     strings.Title,
 }
 
 func (b Bot) withRecover(next tele.HandlerFunc) tele.HandlerFunc {

@@ -32,7 +32,7 @@ targeting:
 
 feeder:
   job: |-
-    🚀 <b>{{ .Overview.RoleName }}</b>
+    🚀 <b>{{ title .Overview.RoleName }}</b>
     {{- if .Overview.Company }}
     Компанія: <b>{{ .Overview.Company }}</b>
     {{- end }}
