@@ -117,11 +117,15 @@ with ranked as (
         as tech_match,
 
         /* resume keywords overlap */
-        cardinality(array(
-            select unnest(j.ai_hashtags)
-            intersect
-            select unnest($3::text[])
-        ))::numeric
+        (
+            select count(*)
+            from unnest(j.ai_hashtags) as tag
+            where exists (
+                select 1
+                from unnest($3::text[]) as kw
+                where tag ilike kw
+            )
+        )::numeric
         as cv_match,
 
         /* role keyword match */

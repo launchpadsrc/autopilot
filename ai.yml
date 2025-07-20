@@ -123,3 +123,18 @@ launchpad:
             name: kickoff_profile
             strict: false
             reflect: true
+
+    03_rework:
+        scoring:
+            model: gpt-4.1
+            prompts:
+                system: |-
+                    Considering the user's profile and resume data, compare it with the collected long list of job vacancies to analyze and calculate a matching score that will tell whether the resume fits the vacancy. Calculate a score for each job in a list.
+                user: |-
+                    <user_resume>
+                    {{ .Resume }}
+                    </user_resume>
+                    
+                    <job_list>
+                    {{ json . }}
+                    </job_list>

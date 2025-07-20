@@ -80,13 +80,11 @@ func (b Bot) onChat(c tele.Context) error {
 }
 
 func (b Bot) forwardStep(c tele.Context, key string) error {
-	const (
-		channel = -1002533811868
-	)
-	return c.Forward(&tele.StoredMessage{
-		MessageID: b.String("steps." + key),
-		ChatID:    channel,
+	_, err := b.Copy(c.Sender(), &tele.StoredMessage{
+		ChatID:    b.Int64("course.chat_id"),
+		MessageID: b.String("course.steps." + key),
 	})
+	return err
 }
 
 func (b Bot) updateUserState(c tele.Context) error {

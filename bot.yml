@@ -12,8 +12,10 @@ config:
   admin_id: 366643327
   jobs_channel: -1002615826128
 
-  steps:
-    01_kickoff: 3
+  course:
+    chat_id: -1002343342107
+    steps:
+      01_kickoff: 416
 
 buttons:
   targeting.job.like:
