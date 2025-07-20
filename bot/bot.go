@@ -74,6 +74,7 @@ func (b Bot) Start() {
 	debug := b.Group()
 	debug.Use(middleware.Whitelist(b.Int64("admin_id")))
 	debug.Handle("/_setproxy", b.onDebugSetProxy)
+	debug.Handle("/_targeting", b.onDebugTargeting)
 
 	b.Bot.Start()
 }

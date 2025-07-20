@@ -1,6 +1,22 @@
 -- name: JobsExist :many
 select id from jobs where id = any(sqlc.slice(ids));
 
+-- name: UniqueJobs :many
+select
+    *
+from
+    jobs
+where
+    id not in (
+        select job_id
+        from user_jobs
+        where user_id = $1
+    )
+order by
+    published_at desc
+limit
+    $2;
+
 -- name: InsertJob :exec
 insert into jobs (
     id,

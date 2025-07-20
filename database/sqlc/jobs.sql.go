@@ -240,3 +240,58 @@ func (q *Queries) ScoredJobs(ctx context.Context, arg ScoredJobsParams) ([]Score
 	}
 	return items, nil
 }
+
+const uniqueJobs = `-- name: UniqueJobs :many
+select
+    created_at, id, source, published_at, link, title, description, ai_company, ai_role, ai_seniority, ai_overview, ai_hashtags
+from
+    jobs
+where
+    id not in (
+        select job_id
+        from user_jobs
+        where user_id = $1
+    )
+order by
+    published_at desc
+limit
+    $2
+`
+
+type UniqueJobsParams struct {
+	UserID int64 `json:"user_id"`
+	Limit  int32 `json:"limit"`
+}
+
+func (q *Queries) UniqueJobs(ctx context.Context, arg UniqueJobsParams) ([]Job, error) {
+	rows, err := q.db.Query(ctx, uniqueJobs, arg.UserID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Job
+	for rows.Next() {
+		var i Job
+		if err := rows.Scan(
+			&i.CreatedAt,
+			&i.ID,
+			&i.Source,
+			&i.PublishedAt,
+			&i.Link,
+			&i.Title,
+			&i.Description,
+			&i.CompanyAI,
+			&i.RoleAI,
+			&i.SeniorityAI,
+			&i.OverviewAI,
+			&i.HashtagsAI,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

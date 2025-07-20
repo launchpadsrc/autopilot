@@ -29,6 +29,7 @@ func NewKickoffStep(state *State) Step {
 
 type (
 	UserProfile struct {
+		Seniority    string               `json:"seniority" jsonschema:"enum=trainee,enum=junior,enum=middle,enum=senior"`
 		Roles        []string             `json:"roles"`
 		Stack        []UserProfileStack   `json:"stack"`
 		Motivation   string               `json:"motivation"`
