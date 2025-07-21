@@ -35,7 +35,7 @@ func (b Bot) onStart(c tele.Context) error {
 	}
 
 	return b.AfterFunc(2*time.Second, func() error {
-		return b.forwardStep(c, "01_kickoff")
+		return b.sendCourseStep(c, "01_kickoff")
 	})
 }
 

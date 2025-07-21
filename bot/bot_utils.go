@@ -51,7 +51,7 @@ func (b Bot) WithNotify(c tele.Context, action tele.ChatAction) func() {
 				return
 			default:
 				c.Notify(action)
-				<-time.After(2 * time.Second)
+				<-time.After(5 * time.Second)
 			}
 		}
 	}()

@@ -45,13 +45,17 @@ func (b Bot) onDebugTargeting(c tele.Context) (err error) {
 		return fmt.Errorf("unique jobs: %w", err)
 	}
 
-	targeted, err := targeting.Find(profile, resume, jobs)
+	targeted, err := targeting.Find(targeting.FindParams{
+		Profile:  profile,
+		Resume:   resume,
+		Jobs:     jobs,
+		MinScore: -1, // force all
+	})
 	if err != nil {
 		return err
 	}
 
 	_ = b.SendJSON(c, targeted)
-	
 	if len(targeted) > 5 {
 		targeted = targeted[:5]
 	}

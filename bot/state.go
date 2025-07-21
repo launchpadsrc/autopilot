@@ -79,12 +79,12 @@ func (b Bot) onChat(c tele.Context) error {
 	return nil
 }
 
-func (b Bot) forwardStep(c tele.Context, key string) error {
-	_, err := b.Copy(c.Sender(), &tele.StoredMessage{
-		ChatID:    b.Int64("course.chat_id"),
-		MessageID: b.String("course.steps." + key),
-	})
-	return err
+func (b Bot) sendCourseStep(c tele.Context, key string) error {
+	return c.Send(
+		b.Text(c, "course."+key),
+		tele.NoPreview,
+	)
+
 }
 
 func (b Bot) updateUserState(c tele.Context) error {

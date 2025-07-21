@@ -29,32 +29,27 @@ func NewKickoffStep(state *State) Step {
 
 type (
 	UserProfile struct {
-		Seniority    string               `json:"seniority" jsonschema:"enum=trainee,enum=junior,enum=middle,enum=senior"`
-		Roles        []string             `json:"roles"`
-		Stack        []UserProfileStack   `json:"stack"`
-		Motivation   string               `json:"motivation"`
-		English      string               `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
-		WeeklyHours  int                  `json:"weekly_hours" jsonschema:"minimum=1"`
-		Salary       UserProfileSalary    `json:"salary"`
-		Assets       UserProfileAssets    `json:"assets"`
-		Problems     []UserProfileProblem `json:"problems"`
-		Observations []string             `json:"observations"`
+		Roles      []string           `json:"roles"`
+		Seniority  string             `json:"seniority" jsonschema:"enum=trainee,enum=junior,enum=middle,enum=senior"`
+		English    string             `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
+		Stack      []UserProfileStack `json:"stack"`
+		Salary     UserProfileSalary  `json:"salary"`
+		Motivation string             `json:"motivation"`
+
+		// Problems, if any.
+		Problems []UserProfileProblem `json:"problems,omitempty"`
+		// Observations are comments create by LLM about the user profile.
+		Observations []string `json:"observations,omitempty"`
 	}
 
 	UserProfileStack struct {
 		Tech  string `json:"tech"`
-		Level int    `json:"level" jsonschema:"minimum=0,maximum=5"`
+		Level int    `json:"level" jsonschema:"minimum=1,maximum=5"`
 	}
 
 	UserProfileSalary struct {
 		Range    string `json:"range"`
 		Currency string `json:"currency" jsonschema:"enum=USD,enum=EUR,enum=UAH"`
-	}
-
-	UserProfileAssets struct {
-		Github   string   `json:"github"`
-		Linkedin string   `json:"linkedin"`
-		Projects []string `json:"projects"`
 	}
 
 	UserProfileProblem struct {

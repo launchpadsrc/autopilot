@@ -120,7 +120,7 @@ launchpad:
             user: |-
                 {{ . }}
         json:
-            name: kickoff_profile
+            name: UserProfile
             strict: false
             reflect: true
 

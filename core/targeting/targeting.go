@@ -14,17 +14,16 @@ import (
 
 var logger = slog.With("package", "core/targeting")
 
-var seniorityRange = []string{
-	"trainee",
-	"junior",
-	"middle",
-	"senior",
-}
+// MinScore is a recommended minimum score for targeting.
+const MinScore = 5
 
-var keywordReplacer = strings.NewReplacer(
-	"go", "golang",
-	"js", "javascript",
-)
+type FindParams struct {
+	Profile launchpad.UserProfile // required
+	Resume  cvschema.Resume       // required
+	Jobs    []sqlc.Job            // required
+	// MinScore allows filtering out jobs that have a score below the specified value.
+	MinScore int
+}
 
 // TargetedJob represents a job that matches the user's profile and resume.
 type TargetedJob struct {
@@ -39,19 +38,25 @@ type TargetedJob struct {
 // It filters jobs based on the user's seniority and skills, and scores them based on the matched keywords.
 // Skill keywords from the profile are given more weight than those from the resume.
 // The jobs are sorted by score in descending order.
-func Find(profile launchpad.UserProfile, resume cvschema.Resume, jobs []sqlc.Job) (targeted []TargetedJob, _ error) {
-	profileSkills := profileSkillKeywords(profile)
-	resumeSkills := resumeSkillKeywords(resume)
+func Find(params FindParams) (targeted []TargetedJob, _ error) {
+	if params.MinScore == 0 {
+		params.MinScore = 1
+	}
+	return find(params)
+}
 
-	joinedSkills := joinedKeywords(profileSkills, resumeSkills)
-	logger.Debug("found skills", "keywords", joinedSkills)
+func find(params FindParams) (targeted []TargetedJob, _ error) {
+	var (
+		seniority = params.ProfileSeniority()
+		keywords  = params.Keywords()
+		keys      = lo.Keys(keywords)
+	)
 
-	seniorities := profileSeniorities(profile)
-	keywords := lo.Keys(joinedSkills)
+	logger.Debug("found keywords", "keywords", keywords)
 
-	for _, job := range jobs {
+	for _, job := range params.Jobs {
 		// Skip jobs that are not in the user's seniority range.
-		if !slices.Contains(seniorities, normalize(job.SeniorityAI)) {
+		if !slices.Contains(seniority, normalize(job.SeniorityAI)) {
 			continue
 		}
 
@@ -59,15 +64,19 @@ func Find(profile launchpad.UserProfile, resume cvschema.Resume, jobs []sqlc.Job
 			return keywordReplacer.Replace(h)
 		})
 
-		matches := lo.Intersect(hashtags, keywords)
+		matches := lo.Intersect(hashtags, keys)
 		// Skip jobs that do not match the user's roles.
 		if len(matches) == 0 {
 			continue
 		}
 
 		score := lo.Sum(lo.Map(matches, func(k string, _ int) int {
-			return joinedSkills[k]
+			return keywords[k]
 		}))
+
+		if score < params.MinScore {
+			continue
+		}
 
 		targeted = append(targeted, TargetedJob{
 			Job:     job,
@@ -83,40 +92,50 @@ func Find(profile launchpad.UserProfile, resume cvschema.Resume, jobs []sqlc.Job
 	return targeted, nil
 }
 
-type keyword struct {
-	kw     string
-	weight int // 1..5
-}
-
-func profileSeniorities(profile launchpad.UserProfile) []string {
-	i := slices.Index(seniorityRange, normalize(profile.Seniority))
+// ProfileSeniority returns a slice of seniority levels that are less than or equal to the user's seniority.
+func (params FindParams) ProfileSeniority() []string {
+	i := slices.Index(seniorityRange, normalize(params.Profile.Seniority))
 	return slices.Clone(seniorityRange[:i])
 }
 
-// profileSkillKeywords extracts keywords from the user profile skills section.
-// All the keywords will have a weight of 2*level for additional priority.
-func profileSkillKeywords(profile launchpad.UserProfile) (kws []keyword) {
-	for _, skill := range profile.Stack {
-		kws = append(kws, keyword{
+// Keywords returns a map of keywords with their weights based on the user's profile and resume.
+func (params FindParams) Keywords() map[string]int {
+	var profileKeywords []keyword
+	for _, skill := range params.Profile.Stack {
+		profileKeywords = append(profileKeywords, keyword{
 			kw:     normalizeKeyword(skill.Tech),
 			weight: skill.Level * 2,
 		})
 	}
-	return kws
-}
 
-// resumeSkillKeywords extracts keywords from the resume skills section.
-// All the keywords will have a weight of 1.
-func resumeSkillKeywords(resume cvschema.Resume) (kws []keyword) {
-	for _, skill := range resume.Skills {
+	var resumeKeywords []keyword
+	for _, skill := range params.Resume.Skills {
 		for _, kw := range skill.Keywords {
-			kws = append(kws, keyword{
+			resumeKeywords = append(resumeKeywords, keyword{
 				kw:     normalizeKeyword(kw),
 				weight: 1,
 			})
 		}
 	}
-	return kws
+
+	return joinedKeywords(profileKeywords, resumeKeywords)
+}
+
+var seniorityRange = []string{
+	"trainee",
+	"junior",
+	"middle",
+	"senior",
+}
+
+var keywordReplacer = strings.NewReplacer(
+	"go", "golang",
+	"js", "javascript",
+)
+
+type keyword struct {
+	kw     string
+	weight int // 1..5
 }
 
 // joinedKeywords merges multiple slices of keywords into a single map.
