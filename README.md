@@ -7,7 +7,7 @@
           <a href="https://launchpad.icu" target="_blank">
             <img src="https://img.shields.io/badge/launchpad-F47B20?style=for-the-badge&logo=rocket&logoColor=white" alt="Landing"/>
           </a>
-          <a href="https://t.me/launchpad_jobs" target="_blank">
+          <a href="https://t.me/launchpad_it" target="_blank">
             <img src="https://img.shields.io/badge/@launchpad-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"/>
           </a>
         </p>
