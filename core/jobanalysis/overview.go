@@ -3,7 +3,7 @@ package jobanalysis
 import (
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/openaix"
+	"launchpad.icu/autopilot/internal/openaix"
 )
 
 type Overview struct {

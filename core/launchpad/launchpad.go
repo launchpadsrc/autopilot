@@ -21,6 +21,7 @@ type Step interface {
 }
 
 // Dumpable requires a step to be able to return its state as JSON.
+// TODO: State dumping should be moved to `autopilot` package scope.
 type Dumpable interface {
 	// Dump returns a JSON representation of the step's state.
 	Dump() (json.RawMessage, error)
@@ -43,6 +44,7 @@ type ResultOf[T any] struct {
 }
 
 // NewResultOf creates a new ResultOf[T] with unwrapped value.
+// FIXME: Simplify... Remove unnecessary complexity with Result types.
 func NewResultOf[T any](r *Result) *ResultOf[T] {
 	v, _ := r.Value.(T)
 	return &ResultOf[T]{Result: r, Value: v}
@@ -98,6 +100,11 @@ func (s *State) Transition() error {
 func (s *State) Current() (string, Step) {
 	state := s.FSM.Current()
 	return state, s.steps[state]
+}
+
+// CurrentName returns the name of the current state.
+func (s *State) CurrentName() string {
+	return s.FSM.Current()
 }
 
 // Dump dumps the state into JSON.

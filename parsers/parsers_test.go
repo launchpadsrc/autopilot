@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"launchpad.icu/autopilot/pkg/jsondump"
+	"launchpad.icu/autopilot/internal/jsondump"
 )
 
 func TestAll(t *testing.T) {

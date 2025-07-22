@@ -10,11 +10,10 @@ import (
 	"go.etcd.io/bbolt"
 
 	"launchpad.icu/autopilot/core/jobanalysis"
-	"launchpad.icu/autopilot/database"
-	"launchpad.icu/autopilot/database/sqlc"
-	"launchpad.icu/autopilot/pkg/aifactory"
-	"launchpad.icu/autopilot/pkg/bboltx"
-	"launchpad.icu/autopilot/pkg/openaix"
+	"launchpad.icu/autopilot/internal/aifactory"
+	"launchpad.icu/autopilot/internal/bboltx"
+	"launchpad.icu/autopilot/internal/database"
+	"launchpad.icu/autopilot/internal/openaix"
 )
 
 func main() {
@@ -49,7 +48,7 @@ func main() {
 				return err
 			}
 
-			return db.InsertJob(context.Background(), sqlc.InsertJobParams{
+			return db.InsertJob(context.Background(), database.InsertJobParams{
 				ID:          entry.ID,
 				Source:      source,
 				PublishedAt: &published,
