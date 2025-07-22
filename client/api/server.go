@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/labstack/echo/v4"
 
-	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/internal/database"
 )
 
 type Config struct {

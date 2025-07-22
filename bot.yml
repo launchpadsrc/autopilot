@@ -1,6 +1,6 @@
 settings:
   token_env: BOT_TOKEN
-  locales_dir: bot/locales
+  locales_dir: client/bot/locales
   parse_mode: html
   long_poller: {}
 

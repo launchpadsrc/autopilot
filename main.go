@@ -6,17 +6,18 @@ import (
 	"log/slog"
 	"os"
 
-	"launchpad.icu/autopilot/api"
-	"launchpad.icu/autopilot/background"
-	"launchpad.icu/autopilot/bot"
-	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/autopilot"
+	"launchpad.icu/autopilot/autopilot/background"
+	"launchpad.icu/autopilot/client/api"
+	"launchpad.icu/autopilot/client/bot"
+	"launchpad.icu/autopilot/internal/aifactory"
+	"launchpad.icu/autopilot/internal/database"
+	"launchpad.icu/autopilot/internal/openaix"
 	"launchpad.icu/autopilot/parsers"
-	"launchpad.icu/autopilot/pkg/aifactory"
-	"launchpad.icu/autopilot/pkg/openaix"
 )
 
 const (
-	migrations = "database/migrations"
+	migrations = "internal/database/migrations"
 )
 
 func init() {
@@ -41,15 +42,19 @@ func main() {
 		log.Fatalln("failed to initialize openaix:", err)
 	}
 
+	ap := autopilot.New(autopilot.Config{
+		DB: db,
+		AI: ai,
+	})
+
 	parsers := map[string]parsers.Parser{
 		"djinni.co":   parsers.NewDjinni(),
 		"jobs.dou.ua": parsers.NewDou(),
 	}
 
 	b, err := bot.New(bot.Config{
-		DB:      db,
-		AI:      ai,
-		Parsers: parsers,
+		Autopilot: ap,
+		Parsers:   parsers,
 	})
 	if err != nil {
 		log.Fatalln("failed to initialize bot:", err)

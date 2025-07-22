@@ -9,7 +9,7 @@ import (
 
 	"launchpad.icu/autopilot/core/cvschema"
 	"launchpad.icu/autopilot/core/launchpad"
-	"launchpad.icu/autopilot/database/sqlc"
+	"launchpad.icu/autopilot/internal/database"
 )
 
 var logger = slog.With("package", "core/targeting")
@@ -20,14 +20,14 @@ const MinScore = 5
 type FindParams struct {
 	Profile launchpad.UserProfile // required
 	Resume  cvschema.Resume       // required
-	Jobs    []sqlc.Job            // required
+	Jobs    []database.Job        // required
 	// MinScore allows filtering out jobs that have a score below the specified value.
 	MinScore int
 }
 
-// TargetedJob represents a job that matches the user's profile and resume.
-type TargetedJob struct {
-	sqlc.Job
+// Job represents a job that matches the user's profile and resume.
+type Job struct {
+	database.Job
 	// Matches contains the keywords that matched the job.
 	Matches []string `json:"matches"`
 	// Score is the sum of weights of the matched keywords.
@@ -38,14 +38,14 @@ type TargetedJob struct {
 // It filters jobs based on the user's seniority and skills, and scores them based on the matched keywords.
 // Skill keywords from the profile are given more weight than those from the resume.
 // The jobs are sorted by score in descending order.
-func Find(params FindParams) (targeted []TargetedJob, _ error) {
+func Find(params FindParams) (targeted []Job, _ error) {
 	if params.MinScore == 0 {
 		params.MinScore = 1
 	}
 	return find(params)
 }
 
-func find(params FindParams) (targeted []TargetedJob, _ error) {
+func find(params FindParams) (targeted []Job, _ error) {
 	var (
 		seniority = params.ProfileSeniority()
 		keywords  = params.Keywords()
@@ -78,14 +78,14 @@ func find(params FindParams) (targeted []TargetedJob, _ error) {
 			continue
 		}
 
-		targeted = append(targeted, TargetedJob{
+		targeted = append(targeted, Job{
 			Job:     job,
 			Matches: matches,
 			Score:   score,
 		})
 	}
 
-	slices.SortFunc(targeted, func(a, b TargetedJob) int {
+	slices.SortFunc(targeted, func(a, b Job) int {
 		return b.Score - a.Score
 	})
 
@@ -95,7 +95,11 @@ func find(params FindParams) (targeted []TargetedJob, _ error) {
 // ProfileSeniority returns a slice of seniority levels that are less than or equal to the user's seniority.
 func (params FindParams) ProfileSeniority() []string {
 	i := slices.Index(seniorityRange, normalize(params.Profile.Seniority))
-	return slices.Clone(seniorityRange[:i])
+	if i == -1 {
+		logger.Warn("unknown seniority level", "seniority", params.Profile.Seniority)
+		return seniorityRange // return all levels if unknown
+	}
+	return seniorityRange[:i]
 }
 
 // Keywords returns a map of keywords with their weights based on the user's profile and resume.

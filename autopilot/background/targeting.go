@@ -10,7 +10,7 @@ import (
 	"launchpad.icu/autopilot/core/cvschema"
 	"launchpad.icu/autopilot/core/launchpad"
 	"launchpad.icu/autopilot/core/targeting"
-	"launchpad.icu/autopilot/database/sqlc"
+	"launchpad.icu/autopilot/internal/database"
 )
 
 func (bg Background) Targeting(t Task) Func {
@@ -32,7 +32,7 @@ func (bg Background) Targeting(t Task) Func {
 	}
 }
 
-func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
+func (bg Background) targeting(ctx context.Context, user database.User) error {
 	var profile launchpad.UserProfile
 	if err := json.Unmarshal(user.Profile, &profile); err != nil {
 		return err
@@ -43,7 +43,7 @@ func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
 		return err
 	}
 
-	jobs, err := bg.db.UniqueJobs(ctx, sqlc.UniqueJobsParams{UserID: user.ID, Limit: 10000})
+	jobs, err := bg.db.UniqueJobs(ctx, database.UniqueJobsParams{UserID: user.ID, Limit: 10000})
 	if err != nil {
 		return fmt.Errorf("unique jobs: %w", err)
 	}
@@ -59,10 +59,10 @@ func (bg Background) targeting(ctx context.Context, user sqlc.User) error {
 	}
 
 	for _, job := range targeted {
-		if err := bg.db.UpsertUserJob(ctx, sqlc.UpsertUserJobParams{
+		if err := bg.db.UpsertUserJob(ctx, database.UpsertUserJobParams{
 			UserID:   user.ID,
 			JobID:    job.ID,
-			Feedback: sqlc.UserJobFeedbackScored,
+			Feedback: database.UserJobFeedbackScored,
 		}); err != nil {
 			return err
 		}

@@ -3,31 +3,29 @@ package bot
 import (
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"strings"
 	"text/template"
 
-	"github.com/sashabaranov/go-openai"
 	tele "gopkg.in/telebot.v4"
 	"gopkg.in/telebot.v4/layout"
 	"gopkg.in/telebot.v4/middleware"
 
-	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/autopilot"
+	"launchpad.icu/autopilot/internal/htmlstrip"
 	"launchpad.icu/autopilot/parsers"
-	"launchpad.icu/autopilot/pkg/htmlstrip"
 )
 
 type Config struct {
-	DB      *database.DB
-	AI      *openai.Client
-	Parsers map[string]parsers.Parser
+	Autopilot *autopilot.Autopilot
+	Parsers   map[string]parsers.Parser
 }
 
 type Bot struct {
 	*layout.Layout
 	*tele.Bot
 
-	db      *database.DB
-	ai      *openai.Client
+	ap      *autopilot.Autopilot
 	parsers map[string]parsers.Parser
 }
 
@@ -53,8 +51,7 @@ func New(c Config) (*Bot, error) {
 	return &Bot{
 		Layout:  lt,
 		Bot:     b,
-		db:      c.DB,
-		ai:      c.AI,
+		ap:      c.Autopilot,
 		parsers: c.Parsers,
 	}, nil
 }
@@ -64,11 +61,11 @@ func (b Bot) Start() {
 
 	b.Use(b.withRecover)
 	b.Use(b.withError)
+	b.Use(b.withUser)
+
 	b.Use(b.Layout.Middleware("ua"))
-	b.Use(b.withUserState)
 
 	b.Handle("/start", b.onStart)
-	b.Handle("/reset", b.onReset)
 	b.Handle(tele.OnText, b.onChat)
 	b.Handle(tele.OnDocument, b.onChat)
 
@@ -102,7 +99,7 @@ func (b Bot) withRecover(next tele.HandlerFunc) tele.HandlerFunc {
 		defer func() {
 			if r := recover(); r != nil {
 				slog.Error("recovered from panic", "error", r)
-				b.sendDebug(c, r)
+				b.sendDebug(c, fmt.Sprintf("%s\n\n%s", r, debug.Stack()))
 			}
 		}()
 		return next(c)

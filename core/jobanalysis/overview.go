@@ -3,7 +3,7 @@ package jobanalysis
 import (
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/openaix"
+	openaix2 "launchpad.icu/autopilot/internal/openaix"
 )
 
 type Overview struct {
@@ -23,7 +23,7 @@ func NewOverviewer(ai *openai.Client) Overviewer {
 }
 
 func (jo Overviewer) Overview(title, description string) (Overview, error) {
-	return openaix.Completion[Overview](jo.ai, "job_analysis.overview", openaix.Map{
+	return openaix2.Completion[Overview](jo.ai, "job_analysis.overview", openaix2.Map{
 		"Title":       title,
 		"Description": description,
 	})

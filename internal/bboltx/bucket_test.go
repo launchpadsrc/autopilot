@@ -10,7 +10,7 @@ import (
 
 	"go.etcd.io/bbolt"
 
-	"launchpad.icu/autopilot/pkg/bboltx"
+	"launchpad.icu/autopilot/internal/bboltx"
 )
 
 type testValue struct {

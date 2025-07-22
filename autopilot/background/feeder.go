@@ -12,9 +12,9 @@ import (
 	tele "gopkg.in/telebot.v4"
 
 	"launchpad.icu/autopilot/core/jobanalysis"
-	"launchpad.icu/autopilot/database/sqlc"
+	"launchpad.icu/autopilot/internal/database"
+	"launchpad.icu/autopilot/internal/jsondump"
 	"launchpad.icu/autopilot/parsers"
-	"launchpad.icu/autopilot/pkg/jsondump"
 )
 
 func (bg Background) Feeder(t Task) Func {
@@ -115,7 +115,7 @@ func (f feeder) uniqueEntries() ([]parsers.FeedEntry, error) {
 }
 
 func (f feeder) insertJob(entry parsers.FeedEntry, overview jobanalysis.Overview) error {
-	return f.db.InsertJob(context.Background(), sqlc.InsertJobParams{
+	return f.db.InsertJob(context.Background(), database.InsertJobParams{
 		Source:      f.source,
 		ID:          entry.ID,
 		PublishedAt: entry.Published,

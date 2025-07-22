@@ -8,7 +8,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/openaix"
+	"launchpad.icu/autopilot/internal/openaix"
 )
 
 // KickoffStep is the first step in the Launchpad roadmap.
@@ -32,8 +32,8 @@ type (
 		Roles      []string           `json:"roles"`
 		Seniority  string             `json:"seniority" jsonschema:"enum=trainee,enum=junior,enum=middle,enum=senior"`
 		English    string             `json:"english" jsonschema:"enum=A1,enum=A2,enum=B1,enum=B2,enum=C1,enum=C2"`
-		Stack      []UserProfileStack `json:"stack"`
 		Salary     UserProfileSalary  `json:"salary"`
+		Stack      []UserProfileStack `json:"stack"`
 		Motivation string             `json:"motivation"`
 
 		// Problems, if any.

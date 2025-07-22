@@ -11,8 +11,8 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/bot"
-	"launchpad.icu/autopilot/database"
+	"launchpad.icu/autopilot/client/bot"
+	"launchpad.icu/autopilot/internal/database"
 	"launchpad.icu/autopilot/parsers"
 )
 

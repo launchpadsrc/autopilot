@@ -6,8 +6,8 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 
-	"launchpad.icu/autopilot/pkg/openaix"
-	"launchpad.icu/autopilot/pkg/poppler"
+	"launchpad.icu/autopilot/internal/openaix"
+	"launchpad.icu/autopilot/internal/poppler"
 )
 
 type Parser struct {
