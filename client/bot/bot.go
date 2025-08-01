@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"text/template"
+	"time"
 
 	tele "gopkg.in/telebot.v4"
 	"gopkg.in/telebot.v4/layout"
@@ -13,20 +14,18 @@ import (
 
 	"launchpad.icu/autopilot/autopilot"
 	"launchpad.icu/autopilot/internal/htmlstrip"
-	"launchpad.icu/autopilot/parsers"
 )
+
+var logger = slog.With("go", "bot")
 
 type Config struct {
 	Autopilot *autopilot.Autopilot
-	Parsers   map[string]parsers.Parser
 }
 
 type Bot struct {
 	*layout.Layout
 	*tele.Bot
-
-	ap      *autopilot.Autopilot
-	parsers map[string]parsers.Parser
+	ap *autopilot.Autopilot
 }
 
 func New(c Config) (*Bot, error) {
@@ -37,7 +36,7 @@ func New(c Config) (*Bot, error) {
 
 	pref := lt.Settings()
 	pref.OnError = func(err error, c tele.Context) {
-		slog.Error("global handler", "error", err)
+		logger.Error("global handler", "error", err)
 	}
 
 	b, err := tele.NewBot(pref)
@@ -49,15 +48,14 @@ func New(c Config) (*Bot, error) {
 	}
 
 	return &Bot{
-		Layout:  lt,
-		Bot:     b,
-		ap:      c.Autopilot,
-		parsers: c.Parsers,
+		Layout: lt,
+		Bot:    b,
+		ap:     c.Autopilot,
 	}, nil
 }
 
 func (b Bot) Start() {
-	slog.Info("starting", "go", "bot")
+	logger.Info("starting")
 
 	b.Use(b.withRecover)
 	b.Use(b.withError)
@@ -73,6 +71,14 @@ func (b Bot) Start() {
 	debug.Use(middleware.Whitelist(b.Int64("admin_id")))
 	debug.Handle("/_setproxy", b.onDebugSetProxy)
 	debug.Handle("/_targeting", b.onDebugTargeting)
+
+	b.ap.On(autopilot.Callbacks{
+		OnFeederJob:    b.onFeederUniqueJob,
+		OnTargetingJob: b.onTargetingJob,
+	})
+
+	go b.ap.StartFeeder(time.Minute)
+	go b.ap.StartTargeting(time.Minute)
 
 	b.Bot.Start()
 }
@@ -98,7 +104,7 @@ func (b Bot) withRecover(next tele.HandlerFunc) tele.HandlerFunc {
 	return func(c tele.Context) error {
 		defer func() {
 			if r := recover(); r != nil {
-				slog.Error("recovered from panic", "error", r)
+				logger.Error("recovered from panic", "error", r)
 				b.sendDebug(c, fmt.Sprintf("%s\n\n%s", r, debug.Stack()))
 			}
 		}()

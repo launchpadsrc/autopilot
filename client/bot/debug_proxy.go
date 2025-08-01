@@ -6,6 +6,7 @@ import (
 
 	tele "gopkg.in/telebot.v4"
 
+	"launchpad.icu/autopilot/autopilot"
 	"launchpad.icu/autopilot/parsers"
 )
 
@@ -18,7 +19,7 @@ func (b Bot) onDebugSetProxy(c tele.Context) error {
 	}
 
 	// Run tests.
-	for _, parser := range b.parsers {
+	for _, parser := range autopilot.Parsers {
 		_, err := parsers.WithProxy(parser, proxy).ParseFeed()
 		if err != nil {
 			return err

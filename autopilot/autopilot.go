@@ -1,9 +1,13 @@
 package autopilot
 
 import (
+	"maps"
+
 	"github.com/sashabaranov/go-openai"
 
+	"launchpad.icu/autopilot/core/targeting"
 	"launchpad.icu/autopilot/internal/database"
+	"launchpad.icu/autopilot/parsers"
 )
 
 // Config has required dependencies for Autopilot.
@@ -14,14 +18,31 @@ type Config struct {
 
 // Autopilot provides automation layer for Launchpad.
 type Autopilot struct {
-	db *database.DB
-	ai *openai.Client
+	db        *database.DB
+	ai        *openai.Client
+	parsers   map[string]parsers.Parser
+	callbacks Callbacks
+}
+
+type Callbacks struct {
+	OnFeederJob    func(FeederJob) error
+	OnTargetingJob func(*User, targeting.Job) error
 }
 
 // New returns Autopilot.
 func New(c Config) *Autopilot {
 	return &Autopilot{
-		db: c.DB,
-		ai: c.AI,
+		db:      c.DB,
+		ai:      c.AI,
+		parsers: maps.Clone(Parsers),
 	}
+}
+
+var Parsers = map[string]parsers.Parser{
+	"djinni.co":   parsers.NewDjinni(),
+	"jobs.dou.ua": parsers.NewDou(),
+}
+
+func (ap *Autopilot) On(c Callbacks) {
+	ap.callbacks = c
 }

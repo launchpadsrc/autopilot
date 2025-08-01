@@ -21,7 +21,7 @@ func NewKeywordsExtractor(ai *openai.Client) KeywordsExtractor {
 
 // Extract extracts K keywords from a list of job descriptions.
 func (ke KeywordsExtractor) Extract(k int, jds []string) ([]Keyword, error) {
-	return openaix.Completion[[]Keyword](ke.ai, "job_analysis.keywords_extractor", openaix2.Map{
+	return openaix.Completion[[]Keyword](ke.ai, "job_analysis.keywords_extractor", openaix.Map{
 		"K":      k,
 		"JobAds": jds,
 	})

@@ -1,15 +1,16 @@
-package background
+package autopilot
 
 import (
+	"cmp"
 	"context"
 	"log/slog"
 	"os"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/samber/lo"
 	"golang.org/x/sync/errgroup"
-	tele "gopkg.in/telebot.v4"
 
 	"launchpad.icu/autopilot/core/jobanalysis"
 	"launchpad.icu/autopilot/internal/database"
@@ -17,11 +18,20 @@ import (
 	"launchpad.icu/autopilot/parsers"
 )
 
-func (bg Background) Feeder(t Task) Func {
-	if os.Getenv("FEEDER_OFF") == "true" {
-		return nil
-	}
+type FeederJob struct {
+	parsers.FeedEntry
+	ParserName string
+	Overview   jobanalysis.Overview
+}
 
+func (ap Autopilot) StartFeeder(d time.Duration) {
+	if off, _ := strconv.ParseBool(os.Getenv("FEEDER_OFF")); off {
+		return
+	}
+	go ap.startBackground(ap.feederTask, cmp.Or(d, time.Minute))
+}
+
+func (ap Autopilot) feederTask(t bgTask) bgFunc {
 	return func(ctx context.Context) error {
 		// A proxy can be modified in runtime.
 		proxy := os.Getenv("FEEDER_PROXY")
@@ -30,12 +40,12 @@ func (bg Background) Feeder(t Task) Func {
 		}
 
 		var errs errgroup.Group
-		for source, parser := range bg.parsers {
+		for source, parser := range ap.parsers {
 			errs.Go((feeder{
-				Background: bg,
-				source:     source,
-				parser:     parsers.WithProxy(parser, proxy),
-				logger:     t.logger.With("parser", source),
+				Autopilot: ap,
+				source:    source,
+				parser:    parsers.WithProxy(parser, proxy),
+				logger:    t.logger.With("parser", source),
 			}).execute)
 		}
 		return errs.Wait()
@@ -43,7 +53,7 @@ func (bg Background) Feeder(t Task) Func {
 }
 
 type feeder struct {
-	Background
+	Autopilot
 	source string
 	parser parsers.Parser
 	logger *slog.Logger
@@ -82,10 +92,15 @@ func (f feeder) execute() error {
 		if err := f.insertJob(entry, overview); err != nil {
 			return err
 		}
-		if err := f.sendToChannel(entry, overview); err != nil {
-			// TODO: Implement queue instead?
-			logger.Error("sending job entry", "error", err)
-			time.Sleep(time.Second) // in case a flood wait occurred
+
+		if f.callbacks.OnFeederJob != nil {
+			if err := f.callbacks.OnFeederJob(FeederJob{
+				ParserName: f.source,
+				FeedEntry:  entry,
+				Overview:   overview,
+			}); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -128,19 +143,4 @@ func (f feeder) insertJob(entry parsers.FeedEntry, overview jobanalysis.Overview
 		OverviewAI:  overview.Description,
 		HashtagsAI:  overview.Hashtags,
 	})
-}
-
-func (f feeder) sendToChannel(entry parsers.FeedEntry, overview jobanalysis.Overview) error {
-	text := f.b.TextLocale("ua", "feeder.job", struct {
-		parsers.FeedEntry
-		Overview jobanalysis.Overview
-		Source   string
-	}{
-		FeedEntry: entry,
-		Overview:  overview,
-		Source:    f.source,
-	})
-
-	_, err := f.b.Send(f.b.ChatID("jobs_channel"), text, tele.NoPreview)
-	return err
 }

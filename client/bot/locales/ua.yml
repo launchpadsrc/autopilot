@@ -80,4 +80,4 @@ feeder:
     
     {{ range .Overview.Hashtags }}#{{ . }} {{ end }}
     
-    <b>Відгукнутись на вакансію:</b> <a href="{{ .Link }}">{{ .Source }} →</a>
+    <b>Відгукнутись на вакансію:</b> <a href="{{ .Link }}">{{ .ParserName }} →</a>
