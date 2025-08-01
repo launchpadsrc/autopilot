@@ -10,13 +10,15 @@ import (
 	"launchpad.icu/autopilot/internal/database"
 )
 
-func (ap Autopilot) StartTargeting(d time.Duration) {
+// StartTargeting starts the background Targeting task that processes users with state "targeting".
+// The relevant unique jobs will be added to the user's current longlist.
+func (ap *Autopilot) StartTargeting(d time.Duration) {
 	go ap.startBackground(ap.targetingTask, cmp.Or(d, time.Minute))
 }
 
 // TargetJobs returns a list of unique jobs that match the user's profile and resume.
 // Returns an error if the user's profile or resume is missing.
-func (ap Autopilot) TargetJobs(ctx context.Context, user *User) ([]targeting.Job, error) {
+func (ap *Autopilot) TargetJobs(ctx context.Context, user *User) ([]targeting.Job, error) {
 	const (
 		// How many jobs to fetch from DB.
 		uniqueJobsLimit = 10000
@@ -40,7 +42,7 @@ func (ap Autopilot) TargetJobs(ctx context.Context, user *User) ([]targeting.Job
 	})
 }
 
-func (ap Autopilot) targetingTask(t bgTask) bgFunc {
+func (ap *Autopilot) targetingTask(t bgTask) bgFunc {
 	return func(ctx context.Context) error {
 		users, err := ap.db.UsersByState(ctx, launchpad.StateTargeting)
 		if err != nil {
@@ -64,7 +66,7 @@ func (ap Autopilot) targetingTask(t bgTask) bgFunc {
 	}
 }
 
-func (ap Autopilot) targeting(ctx context.Context, user *User) error {
+func (ap *Autopilot) targeting(ctx context.Context, user *User) error {
 	targeted, err := ap.TargetJobs(ctx, user)
 	if err != nil {
 		return err

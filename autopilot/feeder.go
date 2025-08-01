@@ -18,20 +18,22 @@ import (
 	"launchpad.icu/autopilot/parsers"
 )
 
+// FeederJob represents a job entry processed by the feeder.
 type FeederJob struct {
 	parsers.FeedEntry
 	ParserName string
 	Overview   jobanalysis.Overview
 }
 
-func (ap Autopilot) StartFeeder(d time.Duration) {
+// StartFeeder starts the background Feeder task that periodically fetches job entries.
+func (ap *Autopilot) StartFeeder(d time.Duration) {
 	if off, _ := strconv.ParseBool(os.Getenv("FEEDER_OFF")); off {
 		return
 	}
 	go ap.startBackground(ap.feederTask, cmp.Or(d, time.Minute))
 }
 
-func (ap Autopilot) feederTask(t bgTask) bgFunc {
+func (ap *Autopilot) feederTask(t bgTask) bgFunc {
 	return func(ctx context.Context) error {
 		// A proxy can be modified in runtime.
 		proxy := os.Getenv("FEEDER_PROXY")
@@ -53,7 +55,7 @@ func (ap Autopilot) feederTask(t bgTask) bgFunc {
 }
 
 type feeder struct {
-	Autopilot
+	*Autopilot
 	source string
 	parser parsers.Parser
 	logger *slog.Logger

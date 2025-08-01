@@ -24,6 +24,7 @@ type Autopilot struct {
 	callbacks Callbacks
 }
 
+// Callbacks defines Autopilot callback functions usually used by background tasks.
 type Callbacks struct {
 	OnFeederJob    func(FeederJob) error
 	OnTargetingJob func(*User, targeting.Job) error
@@ -38,11 +39,13 @@ func New(c Config) *Autopilot {
 	}
 }
 
+// Parsers is a map of based parsers used for job feeds.
 var Parsers = map[string]parsers.Parser{
 	"djinni.co":   parsers.NewDjinni(),
 	"jobs.dou.ua": parsers.NewDou(),
 }
 
+// On registers Autopilot callbacks.
 func (ap *Autopilot) On(c Callbacks) {
 	ap.callbacks = c
 }

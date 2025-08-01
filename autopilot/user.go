@@ -23,7 +23,7 @@ type User struct {
 }
 
 // User returns a user by their ID.
-func (ap Autopilot) User(ctx context.Context, userID int64) (*User, error) {
+func (ap *Autopilot) User(ctx context.Context, userID int64) (*User, error) {
 	user, err := ap.db.User(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (ap Autopilot) User(ctx context.Context, userID int64) (*User, error) {
 }
 
 // CreateUserIfNotExists creates a new user in the database if they do not exist.
-func (ap Autopilot) CreateUserIfNotExists(ctx context.Context, userID int64) error {
+func (ap *Autopilot) CreateUserIfNotExists(ctx context.Context, userID int64) error {
 	exists, err := ap.db.UserExists(ctx, userID)
 	if err != nil || exists {
 		return err

@@ -12,7 +12,7 @@ import (
 type (
 	// StateMachine handles the state execution and transition.
 	StateMachine struct {
-		ap      Autopilot
+		ap      *Autopilot
 		user    *User
 		actions StateActions
 	}
@@ -33,7 +33,7 @@ type (
 
 // StateMachine returns a new StateMachine instance for the given user.
 // Always register all the state actions.
-func (ap Autopilot) StateMachine(user *User, actions StateActions) (*StateMachine, error) {
+func (ap *Autopilot) StateMachine(user *User, actions StateActions) (*StateMachine, error) {
 	if !actions.Valid() {
 		return nil, errors.New("autopilot: invalid state actions")
 	}

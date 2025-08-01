@@ -14,7 +14,7 @@ type (
 	bgFunc = func(context.Context) error
 )
 
-func (ap Autopilot) startBackground(taskFunc func(bgTask) bgFunc, d time.Duration) {
+func (ap *Autopilot) startBackground(taskFunc func(bgTask) bgFunc, d time.Duration) {
 	t := bgTask{
 		logger: slog.With("go", "autopilot/background", "task", funcName(taskFunc)),
 	}
