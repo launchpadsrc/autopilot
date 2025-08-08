@@ -19,7 +19,7 @@ type User struct {
 	Profile   launchpad.UserProfile
 	Resume    cvschema.Resume
 
-	ap Autopilot
+	ap *Autopilot
 }
 
 // User returns a user by their ID.
